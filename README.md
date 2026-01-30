@@ -19,9 +19,9 @@ This project is built to be used together with `pinia` and `pinia-plugin-subscri
 
 
 ```bash
-npm install extending-pinia-store
+npm install pinia-plugin-extending-store
 # or
-yarn add extending-pinia-store
+yarn add pinia-plugin-extending-store
 ```
 
 ## How to register the plugin
@@ -53,7 +53,6 @@ app.mount('#app')
 
 The plugin uses an extended store options shape defined in `src/types/store.ts`. Important fields:
 
-- `actionFlows?: Record<string, { before?: Function|string; after?: Function|string }>` — run logic before/after specific actions.
 - `actionsToExtends?: string[]` — list of parent actions that should be extended/merged into the child.
 - `actionsToRename?: Record<string, string>` — rename parent actions when adding them to the child.
 - `parentsStores?: ParentStoreInterface[]` — array of `ParentStore` instances describing parent stores to include.
@@ -102,7 +101,7 @@ The parent store (`useItemStore`) state and selected actions will be made availa
 ```ts
 import ParentStore from "../../plugins/parentStore"
 import { defineAStore } from "pinia-plugin-subscription"
-import { getStore } from "../../plugins/stores"
+import { getStore } from "../pinia-plugin-store-storage"
 import { ref, computed } from 'vue'
 
 export const useUserStore = (id?: string) => defineAStore<UserStore, UserState>(
@@ -157,7 +156,7 @@ console.log(userStore.user)
 This project registers extended stores in an internal registry. You can retrieve a registered store using `getStore` from `src/plugins/stores.ts`:
 
 ```ts
-import { getStore } from '../plugins/stores'
+import { getStore } from 'pinia-plugin-store-storage'
 
 const someStore = getStore<MyStore, MyState>('storeId')
 ```

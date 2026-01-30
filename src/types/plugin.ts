@@ -24,4 +24,4 @@ export type ParentStore = (
 
 export type ParentStoreConstructor = (() => DefineAugmentedStore<AnyObject, AnyObject> | Store) | ParentStoreClass
 
-export interface PluginStoreOptions { storeOptions: ExtendedStoreOptions }
+export interface PluginStoreOptions extends AnyObject { storeOptions: ExtendedStoreOptions }

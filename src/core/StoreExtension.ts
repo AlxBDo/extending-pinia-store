@@ -1,9 +1,9 @@
 import { computed, toRef } from "vue";
-import ActionsStoreFlow from "./ActionsStoreFlow";
 import { Store } from "pinia-plugin-subscription";
+import { storeStorageSubscriber } from "pinia-plugin-store-storage";
 import type { Store as PiniaStore } from "pinia";
-import type { AnyObject, CustomStore, PluginStoreOptions as ParentPluginStoreOptions } from "pinia-plugin-subscription";
-import type { ActionFlows, PluginStoreOptions } from "../types/plugin";
+import type { AnyObject, CustomConsole, CustomStore, StoreOptions } from "pinia-plugin-subscription";
+import type { PluginStoreOptions } from "../types/plugin";
 import type ParentStore from "../plugins/parentStore";
 
 
@@ -12,8 +12,10 @@ const extendedActionsDefault = ['removePersistedState', 'watch', '$reset']
 const isProd = import.meta.env.PROD
 
 export default class StoreExtension extends Store {
+    protected override _className: string = 'StoreExtension'
     private _extendedActions: Set<string>
     private _parentsStores: CustomStore<AnyObject, AnyObject>[] | undefined
+    protected static override _requiredKeys?: string[] | undefined = ['parentsStores']
 
     get parentsStores(): CustomStore<AnyObject, AnyObject>[] | undefined {
         this.options.childId = this.store.$id
@@ -22,21 +24,17 @@ export default class StoreExtension extends Store {
             this.buildParentStores()
         }
 
-        this.debugLog(`Store.parentsStore EppsOptions - ${this.store.$id}`, [
-            'childId:',
-            this.options.childId,
-            'parentsStores:',
-            this._parentsStores,
-            'options:',
-            this.options
-        ])
-
         return this._parentsStores
     }
 
 
-    constructor(store: PiniaStore, options: PluginStoreOptions, debug: boolean = false) {
-        super(store, options as ParentPluginStoreOptions, debug)
+    constructor(
+        store: PiniaStore,
+        options: PluginStoreOptions & AnyObject & StoreOptions,
+        debug: boolean = false,
+        customConsole?: CustomConsole
+    ) {
+        super(store, options, debug, customConsole)
 
         this._extendedActions = this.initExtendedActions()
         this.extendsStore()
@@ -144,19 +142,28 @@ export default class StoreExtension extends Store {
      * Extends to store stores list in parentsStores property
      */
     private extendsStore(): void {
-        const flows = this.options.actionFlows as ActionFlows;
-        (new ActionsStoreFlow(this.store, flows)).onAction();
+        this.debugLog(`extendsStore() - ${this.store.$id}`, [
+            'parentsStores:',
+            this._parentsStores,
+            'options:',
+            this.options
+        ])
 
         if (this.parentsStores) {
             const storeToExtend = this.parentsStores
 
             if (!storeToExtend || !storeToExtend.length) { return }
 
+            this.addSubscription(
+                'pinia-plugin-store-storage',
+                storeStorageSubscriber,
+                { stores: storeToExtend, subscriptionOptions: { storage: true } }
+            );
+
             (storeToExtend as PiniaStore[]).forEach((ste: PiniaStore) => {
                 if (ste?.$state) {
                     this.duplicateStore(ste)
-                    this.extendsState(ste);
-                    (new ActionsStoreFlow(ste, flows, this.store)).onAction();
+                    this.extendsState(ste)
                 }
             })
         }

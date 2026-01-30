@@ -1,22 +1,25 @@
-import type { PiniaPluginContext } from "pinia";
 import StoreExtension from "../core/StoreExtension";
-import { addStore } from "./stores";
-import type { PluginStoreOptions, PluginSubscriber } from "pinia-plugin-subscription";
+import { PluginSubscriber, StoreOptions } from "pinia-plugin-subscription";
+import { PluginConsole } from "../utils/pluginConsole";
+import { ExtendedStoreOptions } from "../types/store";
+import { pluginName } from "../utils/constantes";
 
-class ExtendsPiniaStore implements PluginSubscriber {
-    invoke({ store, options }: PiniaPluginContext, debug: boolean = false) {
-        const storeExtension = StoreExtension.customizeStore<StoreExtension>(
-            store,
-            options as unknown as PluginStoreOptions,
-            debug
+
+class ExtendsPiniaStore extends PluginSubscriber<StoreExtension> {
+    constructor() {
+        super(
+            pluginName,
+            StoreExtension.customizeStore.bind(StoreExtension),
+            PluginConsole
         )
-
-        if (!storeExtension || !storeExtension.parentsStores) {
-            return store
-        }
-
-        addStore(store)
     }
 }
 
 export default new ExtendsPiniaStore();
+
+
+declare module 'pinia' {
+    export interface DefineStoreOptionsBase<S, Store> {
+        storeOptions?: ExtendedStoreOptions & StoreOptions
+    }
+}

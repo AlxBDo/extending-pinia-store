@@ -1,25 +1,30 @@
 {
   "author": "Alexandre Bidaud <alexbidaud85@gmail.com> (https://github.com/AlxBDo)",
-  "name": "extending-pinia-store",
+  "name": "pinia-plugin-extending-store",
   "description": "A Pinia plugin to create reusable stores that can extend other Pinia stores.",
-  "version": "0.0.0-alpha.1",
+  "version": "0.0.0-beta.1",
   "type": "module",
   "exports": {
     ".": {
       "types": "./dist/types/index.d.ts",
-      "import": "./dist/extending-pinia-store.js",
-      "require": "./dist/extending-pinia-store.umd.cjs"
+      "import": "./dist/pinia-plugin-extending-store.js",
+      "require": "./dist/pinia-plugin-extending-store.umd.cjs"
     }
   },
-  "main": "./dist/extending-pinia-store.umd.cjs",
+  "main": "./dist/pinia-plugin-extending-store.umd.cjs",
   "types": "./dist/types/index.d.ts",
   "files": [
     "dist"
   ],
   "scripts": {
     "dev": "vite",
-    "build": "vite build && tsc --emitDeclarationOnly --outDir dist",
-    "preview": "vite preview"
+    "build": "vitest && vite build && tsc --emitDeclarationOnly --outDir dist",
+    "preview": "vite preview",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "pinia-plugin-store-storage": "^0.0.0-alpha.2",
+    "pinia-plugin-subscription": "^0.0.0-alpha.4"
   },
   "devDependencies": {
     "@types/node": "^24.10.1",
@@ -28,10 +33,8 @@
     "pinia": "^3.0.2",
     "typescript": "~5.9.3",
     "vite": "^7.2.4",
+    "vitest": "^4.0.16",
     "vue": "^3.5.24",
     "vue-tsc": "^3.1.4"
-  },
-  "dependencies": {
-    "pinia-plugin-subscription": "^0.0.0-alpha.4"
   }
 }
