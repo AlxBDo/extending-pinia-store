@@ -1,7 +1,7 @@
 import ParentStoreClass from "../plugins/parentStore"
 
 import type { Store } from "pinia"
-import type { AnyObject, CustomStore, DefineAugmentedStore } from "pinia-plugin-subscription"
+import type { AnyObject, CustomStore } from "pinia-plugin-subscription"
 import type { ExtendedStoreOptions } from "./store"
 
 
@@ -19,9 +19,9 @@ export interface ParentStoreInterface {
 
 
 export type ParentStore = (
-    <TStore = AnyObject, TState = AnyObject>(id: string) => (DefineAugmentedStore<TStore, TState> | Store)
+    <TStore = AnyObject, TState = AnyObject>(id: string) => (CustomStore<TStore, TState> | Store)
 )
 
-export type ParentStoreConstructor = (() => DefineAugmentedStore<AnyObject, AnyObject> | Store) | ParentStoreClass
+export type ParentStoreConstructor = (() => CustomStore<AnyObject, AnyObject> | Store) | ParentStoreClass
 
 export interface PluginStoreOptions extends AnyObject { storeOptions: ExtendedStoreOptions }

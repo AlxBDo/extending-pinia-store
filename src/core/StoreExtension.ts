@@ -12,7 +12,6 @@ const extendedActionsDefault = ['removePersistedState', 'watch', '$reset']
 const isProd = import.meta.env.PROD
 
 export default class StoreExtension extends Store {
-    protected override _className: string = 'StoreExtension'
     private _extendedActions: Set<string>
     private _parentsStores: CustomStore<AnyObject, AnyObject>[] | undefined
     protected static override _requiredKeys?: string[] | undefined = ['parentsStores']
@@ -38,6 +37,7 @@ export default class StoreExtension extends Store {
 
         this._extendedActions = this.initExtendedActions()
         this.extendsStore()
+        this.store.resetParentStores = () => { this.resetParentStores }
     }
 
 
@@ -102,6 +102,8 @@ export default class StoreExtension extends Store {
                 } else if (typeOfProperty === 'object' && !Array.isArray(storeToExtend[key])) {
                     this.store[key] = this.createComputed(storeToExtend, key)
                     this.addToCustomProperties(key)
+                } else {
+                    this.store[key] = toRef(storeToExtend, key)
                 }
             }
         })
@@ -144,7 +146,7 @@ export default class StoreExtension extends Store {
     private extendsStore(): void {
         this.debugLog(`extendsStore() - ${this.store.$id}`, [
             'parentsStores:',
-            this._parentsStores,
+            this.parentsStores,
             'options:',
             this.options
         ])
@@ -179,5 +181,18 @@ export default class StoreExtension extends Store {
 
     private initExtendedActions(): Set<string> {
         return new Set<string>([...extendedActionsDefault, ...((this.options?.actionsToExtends as string[]) ?? [])])
+    }
+
+    protected static override hasRequiredKeys(options: AnyObject): boolean {
+        return Array.isArray(options?.parentsStores) && options.parentsStores.length > 0
+    }
+
+    private resetParentStores(): void {
+        const parentStores = this.parentsStores
+        if (Array.isArray(parentStores) && parentStores.length) {
+            parentStores.forEach(store => store?.$reset?.())
+        }
+
+        this.debugLog('resetParentsStores', { parentStores })
     }
 }

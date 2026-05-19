@@ -2,7 +2,7 @@
   "author": "Alexandre Bidaud <alexbidaud85@gmail.com> (https://github.com/AlxBDo)",
   "name": "pinia-plugin-extending-store",
   "description": "A Pinia plugin to create reusable stores that can extend other Pinia stores.",
-  "version": "0.0.0-beta.1",
+  "version": "0.0.1",
   "type": "module",
   "exports": {
     ".": {
@@ -23,8 +23,8 @@
     "test": "vitest"
   },
   "dependencies": {
-    "pinia-plugin-store-storage": "^0.0.0-alpha.2",
-    "pinia-plugin-subscription": "^0.0.0-alpha.4"
+    "pinia-plugin-store-storage": "^0.0.1",
+    "pinia-plugin-subscription": "^0.0.2"
   },
   "devDependencies": {
     "@types/node": "^24.10.1",

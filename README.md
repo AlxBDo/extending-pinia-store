@@ -5,7 +5,6 @@ Plugin that extends Pinia stores (built on top of `pinia-plugin-subscription`) t
 ## Key ideas:
 - Extend a "child" store with state, getters and actions from one or more "parent" stores.
 - Support both Options API and Setup API style stores created with `defineAStore` (from `pinia-plugin-subscription`).
-- Configure which parent actions are merged, how properties/actions are renamed, and add pre/post action flows.
 
 ## Features
 - Compose parent stores into a child store via `parentsStores` (uses `ParentStore` helper).
@@ -45,7 +44,7 @@ app.mount('#app')
 
 ## How it works (high level)
 - The project provides `ExtendsPiniaStore` (a `PluginSubscriber`) which will be invoked by `pinia-plugin-subscription` when a store is created.
-- The core logic is in `src/core/StoreExtension.ts` which duplicates state, computed properties and actions from parent stores into the child store, and wires action flows.
+- The core logic is in `src/core/StoreExtension.ts` which duplicates state, computed properties and actions from parent stores into the child store.
 - Parent stores are described with the helper `ParentStore` (see `src/plugins/parentStore.ts`) which builds parent store IDs dynamically using the child's id.
 - Extended stores are registered in a registry (`src/plugins/stores.ts`) so other parts of the app can retrieve them with `getStore`.
 
@@ -55,7 +54,7 @@ The plugin uses an extended store options shape defined in `src/types/store.ts`.
 
 - `actionsToExtends?: string[]` — list of parent actions that should be extended/merged into the child.
 - `actionsToRename?: Record<string, string>` — rename parent actions when adding them to the child.
-- `parentsStores?: ParentStoreInterface[]` — array of `ParentStore` instances describing parent stores to include.
+- `parentsStores: ParentStoreInterface[]` — array of `ParentStore` instances describing parent stores to include.
 - `propertiesToRename?: Record<string, string>` — rename parent state properties when adding them to the child.
 
 ### Examples

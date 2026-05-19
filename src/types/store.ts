@@ -4,6 +4,10 @@ import type { CustomStore } from "pinia-plugin-subscription";
 import type { ActionFlows, ParentStoreInterface } from "./plugin";
 
 
+export interface ExtendedStoreActions {
+    resetParentStores: () => void
+}
+
 export interface ExtendedStoreOptions {
     actionFlows?: ActionFlows
     actionsToExtends?: string[]
@@ -17,4 +21,4 @@ export interface ExtendedState {
     isOptionApi?: boolean | Ref<boolean | undefined>
 }
 
-export type ExtendedStore<TStore, TState> = CustomStore<TStore, TState> & ExtendedStoreOptions
+export type ExtendedStore<TStore, TState> = CustomStore<TStore, TState> & ExtendedStoreOptions & ExtendedStoreActions
