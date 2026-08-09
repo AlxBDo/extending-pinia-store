@@ -12,6 +12,7 @@ const extendedActionsDefault = ['removePersistedState', 'watch', '$reset']
 const isProd = import.meta.env.PROD
 
 export default class StoreExtension extends Store {
+    protected override _className: string = 'StoreExtension'
     private _extendedActions: Set<string>
     private _parentsStores: CustomStore<AnyObject, AnyObject>[] | undefined
     protected static override _requiredKeys?: string[] | undefined = ['parentsStores']

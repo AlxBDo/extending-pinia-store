@@ -15,10 +15,16 @@ export default defineConfig({
       fileName: pluginName,
     },
     rollupOptions: {
-      external: ['pinia'],
+      external: [
+        'pinia',
+        'pinia-plugin-store-storage',
+        'pinia-plugin-subscription'
+      ],
       output: {
         globals: {
-          pinia: 'Pinia'
+          pinia: 'Pinia',
+          'pinia-plugin-store-storage': 'PiniaPluginStoreStorage',
+          'pinia-plugin-subscription': 'PiniaPluginSubscription'
         },
       },
     },
