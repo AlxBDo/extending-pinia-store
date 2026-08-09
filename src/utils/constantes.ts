@@ -1,0 +1,1 @@
+export const pluginName: string = 'pinia-plugin-extending-store';
