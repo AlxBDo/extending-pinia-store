@@ -47,7 +47,7 @@ export const useErrorsStore = <TError extends IError = IError>(id: string) =>
             }
 
             function getErrorsByLevel(value: number, comparison: ComparisonNumber = '>='): TError[] | undefined {
-                return getStore().getErrors({ level: value }, comparison) as TError[] | undefined;
+                return getStore().getErrors({ level: value } as Partial<TError>, comparison) as TError[] | undefined;
             }
 
             function getExtendingStore(): ExtendingErrorsStore<TError> | undefined {

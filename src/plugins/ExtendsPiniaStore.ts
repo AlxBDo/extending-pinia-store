@@ -24,10 +24,3 @@ class ExtendsPiniaStore extends PluginSubscriber<StoreExtension> {
 }
 
 export default new ExtendsPiniaStore();
-
-
-declare module 'pinia' {
-    export interface DefineStoreOptionsBase<S, Store> {
-        storeOptions?: ExtendedStoreOptions & StoreOptions
-    }
-}

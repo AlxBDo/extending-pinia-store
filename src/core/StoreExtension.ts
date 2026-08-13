@@ -10,7 +10,7 @@ import type ParentStore from "../plugins/parentStore";
 
 const extendedActionsDefault = ['removePersistedState', 'watch', '$reset']
 
-const isProd = import.meta.env.PROD
+const isProd = (import.meta as AnyObject).env.PROD
 const getDefineAStoreSetupContext = (
     PiniaPluginSubscription as typeof PiniaPluginSubscription & {
         getDefineAStoreSetupContext?: (store: AnyObject) => { extensions: Record<string, unknown> }
@@ -186,6 +186,7 @@ export default class StoreExtension extends Store {
             setupContext.extensions.extending = this.store
         }
     }
+
     private getActionNameForChildStore(parentStoreActionName: string): string {
         return (this.actionsToRename && this.actionsToRename[parentStoreActionName]) ?? parentStoreActionName
     }
@@ -198,7 +199,7 @@ export default class StoreExtension extends Store {
         return new Set<string>([...extendedActionsDefault, ...((this.options?.actionsToExtends as string[]) ?? [])])
     }
 
-    protected static override hasRequiredKeys(options: AnyObject): boolean {
+    protected static hasRequiredKeys(options: AnyObject): boolean {
         return Array.isArray(options?.parentsStores) && options.parentsStores.length > 0
     }
 

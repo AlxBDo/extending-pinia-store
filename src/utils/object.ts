@@ -1,4 +1,4 @@
-import type { AnyObject } from "../types";
+import type { AnyObject } from "pinia-plugin-subscription";
 import type { Comparison, ComparisonNumber } from "../types/comparison";
 
 
