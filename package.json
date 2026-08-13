@@ -38,6 +38,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vitest && vite build && tsc --emitDeclarationOnly --outDir dist",
+    "prebuild": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\"",
     "preview": "vite preview",
     "test": "vitest",
     "coverage": "vitest run --coverage"

@@ -1,5 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
+const { getDefineAStoreSetupContextMock } = vi.hoisted(() => ({
+  getDefineAStoreSetupContextMock: vi.fn()
+}))
+
 // Mocks pour éviter d'avoir à charger les packages externes
 vi.mock('pinia-plugin-subscription', () => {
   return {
@@ -27,7 +31,8 @@ vi.mock('pinia-plugin-subscription', () => {
       isOptionApi() { return false }
       getValue(value: any) { return value && value.value !== undefined ? value.value : value }
       debugLog() { /* no-op */ }
-    }
+    },
+    getDefineAStoreSetupContext: getDefineAStoreSetupContextMock
   }
 })
 
@@ -39,6 +44,7 @@ import StoreExtension from '../core/StoreExtension'
 describe('StoreExtension', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    getDefineAStoreSetupContextMock.mockReset()
   })
 
   it('initExtendedActions merges defaults and provided actions', () => {
@@ -126,5 +132,16 @@ describe('StoreExtension', () => {
     // custom properties registered
     expect(childStore._customProperties.has('parentObj')).toBeTruthy()
     expect(childStore._customProperties.has('renamedCount')).toBeTruthy()
+  })
+
+  it('injects the extended store API into the setup context', () => {
+    const setupContext = { extensions: {} }
+    const childStore: any = { $id: 'child', _customProperties: new Set(), $state: {} }
+
+    getDefineAStoreSetupContextMock.mockReturnValue(setupContext)
+
+    new StoreExtension(childStore, { parentsStores: [{ build: () => ({ $state: {} }) }] } as any)
+
+    expect(setupContext.extensions.extending).toBe(childStore)
   })
 })
