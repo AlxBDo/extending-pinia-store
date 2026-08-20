@@ -2,7 +2,7 @@ import { defineStore } from "pinia";
 import type { AnyObject } from "pinia-plugin-subscription";
 import { arrayObjectFindAllBy, arrayObjectFindBy } from '../utils/object'
 import type { Comparison } from "../types/comparison";
-import type { CollectionState, CollectionStoreMethods, SearchCollectionCriteria } from "../types/collection";
+import type { CollectionState, SearchCollectionCriteria } from "../types/collection";
 
 
 function getItemCriteria(item: AnyObject): SearchCollectionCriteria {

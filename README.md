@@ -46,7 +46,7 @@ app.mount('#app')
 - The project provides `ExtendsPiniaStore` (a `PluginSubscriber`) which will be invoked by `pinia-plugin-subscription` when a store is created.
 - The core logic is in `src/core/StoreExtension.ts` which duplicates state, computed properties and actions from parent stores into the child store.
 - Parent stores are described with the helper `ParentStore` (see `src/plugins/parentStore.ts`) which builds parent store IDs dynamically using the child's id.
-- Extended stores are registered in a registry (`src/plugins/stores.ts`) so other parts of the app can retrieve them with `getStore`.
+- Extended stores are registered in a registry (`src/plugins/stores.ts`) so other parts of the app can retrieve them with `getExtendingStore`.
 
 ### Store options (API)
 
@@ -100,7 +100,7 @@ The parent store (`useItemStore`) state and selected actions will be made availa
 ```ts
 import ParentStore from "../../plugins/parentStore"
 import { defineAStore } from "pinia-plugin-subscription"
-import { getStore } from "../pinia-plugin-store-storage"
+import { getExtendingStore } from "../pinia-plugin-extending-store"
 import { ref, computed } from 'vue'
 
 export const useUserStore = (id?: string) => defineAStore<UserStore, UserState>(
@@ -110,7 +110,7 @@ export const useUserStore = (id?: string) => defineAStore<UserStore, UserState>(
     const password = ref<string>()
 
     const user = computed(() => ({
-      ...(getStore<ContactStore, ContactState>(id ?? 'user')?.contact ?? {}),
+      ...(getExtendingStore<ContactStore, ContactState>(id ?? 'user')?.contact ?? {}),
       password: password.value
     }))
 
@@ -148,16 +148,6 @@ userStore.setData({ firstname: 'Alex', lastname: 'B.' })
 // read a composed computed
 console.log(userStore.user)
 </script>
-```
-
-### Accessing registered stores
-
-This project registers extended stores in an internal registry. You can retrieve a registered store using `getStore` from `src/plugins/stores.ts`:
-
-```ts
-import { getStore } from 'pinia-plugin-store-storage'
-
-const someStore = getStore<MyStore, MyState>('storeId')
 ```
 
 ### When to use this plugin

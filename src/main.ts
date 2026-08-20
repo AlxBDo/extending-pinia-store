@@ -12,7 +12,7 @@ const pinia = createPinia()
 pinia.use(
     createPlugin(
         [ExtendsPiniaStore],
-        [PPS, pluginName, 'PluginSubscription']
+        //[PPS, pluginName, 'PluginSubscription']
     )
 )
 

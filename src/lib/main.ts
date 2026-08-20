@@ -3,7 +3,7 @@ import ParentStore from '../plugins/parentStore'
 
 
 export { ExtendsPiniaStore }
-export { getStore } from 'pinia-plugin-store-storage'
+export { getExtendingStore } from '../utils/store'
 export { ParentStore }
 export { pluginName as PLUGIN_NAME } from '../utils/constantes'
 
