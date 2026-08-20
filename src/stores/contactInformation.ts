@@ -1,5 +1,4 @@
-import { defineAStore, SearchCollectionCriteria } from "pinia-plugin-subscription";
-import { getStore as getAStore } from "pinia-plugin-store-storage";
+import { defineAStoreCtx, SearchCollectionCriteria, getEnhancedStore } from "pinia-plugin-subscription";
 import { useCollectionStore } from './collection'
 import ParentStore from '../plugins/parentStore'
 import type { CollectionState, CollectionStoreMethods } from '../types/collection'
@@ -7,7 +6,9 @@ import type { ContactInformation, ContactInformationValue } from '../types/conta
 import { computed } from "vue";
 
 
-export const useContactInformationStore = (id: string) => defineAStore<CollectionStoreMethods, CollectionState<ContactInformation>>(id, () => {
+export const useContactInformationStore = (
+    id: string
+) => defineAStoreCtx<CollectionStoreMethods, CollectionState<ContactInformation>>(id, (ctx) => {
     const email = computed({
         get: () => getContactInformationValue('email'),
         set: (value: string) => addEmail('email', value)
@@ -51,7 +52,7 @@ export const useContactInformationStore = (id: string) => defineAStore<Collectio
     }
 
     function getStore() {
-        return getAStore<CollectionStoreMethods, CollectionState<ContactInformation>>(id)
+        return getEnhancedStore<CollectionStoreMethods & CollectionState<ContactInformation>>(ctx)
     }
 
 

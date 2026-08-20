@@ -46,21 +46,4 @@ describe('useErrorsStore', () => {
         expect(getError).toHaveBeenCalledWith({ id: 'error-1' })
         expect(addItem).toHaveBeenCalledWith({ id: 'error-1', message: 'boom', level: 1 })
     })
-
-    it('falls back to pinia-plugin-store-storage when extending context is unavailable', () => {
-        const fallbackStore = {
-            addItem: vi.fn(),
-            getError: vi.fn(() => undefined),
-            getErrors: vi.fn(() => [])
-        }
-
-        getStoreMock.mockReturnValue(fallbackStore)
-
-        const store = useErrorsStore('fallbackStore')
-        store.addError({ id: 'error-2', message: 'fallback' })
-
-        expect(getStoreMock).toHaveBeenCalledWith('fallbackStore')
-        expect(fallbackStore.getError).toHaveBeenCalledWith({ id: 'error-2' })
-        expect(fallbackStore.addItem).toHaveBeenCalledWith({ id: 'error-2', message: 'fallback', level: 1 })
-    })
 })

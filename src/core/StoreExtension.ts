@@ -3,7 +3,6 @@ import { Store } from "pinia-plugin-subscription";
 import { storeStorageSubscriber } from "pinia-plugin-store-storage";
 import type { Store as PiniaStore } from "pinia";
 import type { AnyObject, CustomConsole, CustomStore, StoreOptions } from "pinia-plugin-subscription";
-import * as PiniaPluginSubscription from "pinia-plugin-subscription";
 import type { PluginStoreOptions } from "../types/plugin";
 import type ParentStore from "../plugins/parentStore";
 
@@ -11,11 +10,6 @@ import type ParentStore from "../plugins/parentStore";
 const extendedActionsDefault = ['removePersistedState', 'watch', '$reset']
 
 const isProd = (import.meta as AnyObject).env.PROD
-const getDefineAStoreSetupContext = (
-    PiniaPluginSubscription as typeof PiniaPluginSubscription & {
-        getDefineAStoreSetupContext?: (store: AnyObject) => { extensions: Record<string, unknown> }
-    }
-).getDefineAStoreSetupContext
 
 export default class StoreExtension extends Store {
     protected override _className: string = 'StoreExtension'
@@ -44,7 +38,6 @@ export default class StoreExtension extends Store {
 
         this._extendedActions = this.initExtendedActions()
         this.extendsStore()
-        this.extendSetupContext()
         this.store.resetParentStores = () => { this.resetParentStores }
     }
 
@@ -176,14 +169,6 @@ export default class StoreExtension extends Store {
                     this.extendsState(ste)
                 }
             })
-        }
-    }
-
-    private extendSetupContext(): void {
-        const setupContext = getDefineAStoreSetupContext?.(this.store)
-
-        if (setupContext) {
-            setupContext.extensions.extending = this.store
         }
     }
 
