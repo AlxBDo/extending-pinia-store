@@ -36,7 +36,6 @@ vi.mock('pinia-plugin-subscription', () => {
   }
 })
 
-vi.mock('pinia-plugin-store-storage', () => ({ storeStorageSubscriber: () => { } }))
 vi.mock('pinia-plugin-action-flow', () => ({ ActionsFlows: class ActionsFlows { } }))
 
 import StoreExtension from '../core/StoreExtension'
