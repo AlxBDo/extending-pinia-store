@@ -1,6 +1,5 @@
 import { computed, toRef } from "vue";
 import { Store } from "pinia-plugin-subscription";
-import { storeStorageSubscriber } from "pinia-plugin-store-storage";
 import type { Store as PiniaStore } from "pinia";
 import type { AnyObject, CustomConsole, CustomStore, StoreOptions } from "pinia-plugin-subscription";
 import type { PluginStoreOptions } from "../types/plugin";
@@ -156,12 +155,6 @@ export default class StoreExtension extends Store {
             const storeToExtend = this.parentsStores
 
             if (!storeToExtend || !storeToExtend.length) { return }
-
-            this.addSubscription(
-                'pinia-plugin-store-storage',
-                storeStorageSubscriber,
-                { stores: storeToExtend, subscriptionOptions: { storage: true } }
-            );
 
             (storeToExtend as PiniaStore[]).forEach((ste: PiniaStore) => {
                 if (ste?.$state) {
