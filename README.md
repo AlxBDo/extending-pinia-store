@@ -46,7 +46,6 @@ app.mount('#app')
 - The project provides `ExtendsPiniaStore` (a `PluginSubscriber`) which will be invoked by `pinia-plugin-subscription` when a store is created.
 - The core logic is in `src/core/StoreExtension.ts` which duplicates state, computed properties and actions from parent stores into the child store.
 - Parent stores are described with the helper `ParentStore` (see `src/plugins/parentStore.ts`) which builds parent store IDs dynamically using the child's id.
-- Extended stores are registered in a registry (`src/plugins/stores.ts`) so other parts of the app can retrieve them with `getExtendingStore`.
 
 ### Store options (API)
 
@@ -99,18 +98,17 @@ The parent store (`useItemStore`) state and selected actions will be made availa
 
 ```ts
 import ParentStore from "../../plugins/parentStore"
-import { defineAStore } from "pinia-plugin-subscription"
-import { getExtendingStore } from "../pinia-plugin-extending-store"
+import { defineAStoreCtx, getEnhancedStore } from "pinia-plugin-subscription"
 import { ref, computed } from 'vue'
 
-export const useUserStore = (id?: string) => defineAStore<UserStore, UserState>(
+export const useUserStore = (id?: string) => defineAStoreCtx<UserStore, UserState>(
   id ?? 'user',
-  () => {
+  (ctx) => {
     const lists = ref<List[]>()
     const password = ref<string>()
 
     const user = computed(() => ({
-      ...(getExtendingStore<ContactStore, ContactState>(id ?? 'user')?.contact ?? {}),
+      ...(getEnhancedStore<ContactStore, ContactState>(ctx)?.contact ?? {}),
       password: password.value
     }))
 
