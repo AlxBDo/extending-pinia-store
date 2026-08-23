@@ -17,13 +17,11 @@ export default defineConfig({
     rollupOptions: {
       external: [
         'pinia',
-        'pinia-plugin-store-storage',
         'pinia-plugin-subscription'
       ],
       output: {
         globals: {
           pinia: 'Pinia',
-          'pinia-plugin-store-storage': 'PiniaPluginStoreStorage',
           'pinia-plugin-subscription': 'PiniaPluginSubscription'
         },
       },

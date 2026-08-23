@@ -21,7 +21,6 @@ export declare class ParentStore implements ParentStoreInterface {
 declare class StoreExtension extends Store { }
 declare class ExtendsPiniaStoreClass extends PluginSubscriber<StoreExtension> { }
 export declare const ExtendsPiniaStore: new () => ExtendsPiniaStoreClass;
-export { getStore } from 'pinia-plugin-store-storage'
 
 /**
  * Stores
