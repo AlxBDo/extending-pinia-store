@@ -56,6 +56,8 @@ The plugin uses an extended store options shape defined in `src/types/store.ts`.
 - `parentsStores: ParentStoreInterface[]` — array of `ParentStore` instances describing parent stores to include.
 - `propertiesToRename?: Record<string, string>` — rename parent state properties when adding them to the child.
 
+When an action exists on both a parent and child store and is listed in `actionsToExtends`, the parent action runs first. If it returns a promise, the child action runs only after that promise resolves. Parent errors are propagated and prevent the child action from running. The chained action returns the child action's result.
+
 ### Examples
 
 #### Option API example (from `src/stores/experiments/optionApi.ts`)

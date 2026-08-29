@@ -7,34 +7,33 @@ const { getEnhancedStoreMock } = vi.hoisted(() => ({
 // Mocks pour éviter d'avoir à charger les packages externes
 vi.mock('pinia-plugin-subscription', () => {
   return {
-    Store: class Store {
-      store: any
-      options: any
-      state: any
-      _className = 'Store'
-
-      constructor(store: any, options: any) {
-        this.store = store
-        this.options = options || {}
-        this.state = store.$state ?? {}
-        // ensure _customProperties exists
-        this.store._customProperties = this.store._customProperties ?? new Set()
-      }
-
-      addSubscription() {
-        // no-op
-      }
-
-      hasDeniedFirstChar() { return false }
-      storeHas(key: string) { return key in this.store }
-      stateHas(key: string) { return key in this.state }
-      isOptionApi() { return false }
-      getValue(value: any) { return value && value.value !== undefined ? value.value : value }
-      debugLog() { /* no-op */ }
-    },
     getEnhancedStore: getEnhancedStoreMock
   }
 })
+
+vi.mock('pinia-plugin-subscription/helpers', () => ({
+  Store: class Store {
+    store: any
+    options: any
+    state: any
+    _className = 'Store'
+
+    constructor(store: any, options: any) {
+      this.store = store
+      this.options = options || {}
+      this.state = store.$state ?? {}
+      this.store._customProperties = this.store._customProperties ?? new Set()
+    }
+
+    addSubscription() { /* no-op */ }
+    hasDeniedFirstChar() { return false }
+    storeHas(key: string) { return key in this.store }
+    stateHas(key: string) { return key in this.state }
+    isOptionApi() { return false }
+    getValue(value: any) { return value && value.value !== undefined ? value.value : value }
+    debugLog() { /* no-op */ }
+  }
+}))
 
 vi.mock('pinia-plugin-action-flow', () => ({ ActionsFlows: class ActionsFlows { } }))
 
@@ -59,28 +58,120 @@ describe('StoreExtension', () => {
     expect(ext.extendedActions.has('$reset')).toBeTruthy()
   })
 
-  it('duplicates functions and extends existing actions calling parent then original (arrow version)', () => {
+  it('chains synchronous actions in order and returns the child result', () => {
     const calls: string[] = []
 
     const parent = {
       $state: { count: 1 },
-      say() { calls.push('parent') }
+      say() {
+        calls.push('parent')
+        return 'parent-result'
+      }
     }
 
     const childStore: any = { $id: 'child', _customProperties: new Set(), $state: {} }
-    // child already has a say method -> should be extended
-    childStore.say = () => calls.push('child')
+    childStore.say = () => {
+      calls.push('child')
+      return 'child-result'
+    }
 
     const options: any = {
       parentsStores: [{ build: () => parent }],
       actionsToExtends: ['say']
     }
 
-    const ext = new StoreExtension(childStore, options)
+    new StoreExtension(childStore, options)
 
-    // calling the resulting method should call parent then original (arrow path used because isOptionApi false)
-    childStore.say()
+    expect(childStore.say()).toBe('child-result')
     expect(calls).toEqual(['parent', 'child'])
+  })
+
+  it('waits for an async parent action before calling the child action', async () => {
+    const calls: string[] = []
+    let resolveParent!: () => void
+    const parent = {
+      $state: {},
+      save: () => new Promise<void>((resolve) => {
+        resolveParent = () => {
+          calls.push('parent')
+          resolve()
+        }
+      })
+    }
+    const childStore: any = {
+      $id: 'child',
+      _customProperties: new Set(),
+      $state: {},
+      save: () => {
+        calls.push('child')
+        return 'child-result'
+      }
+    }
+
+    new StoreExtension(childStore, {
+      parentsStores: [{ build: () => parent }],
+      actionsToExtends: ['save']
+    } as any)
+
+    const result = childStore.save()
+    expect(calls).toEqual([])
+
+    resolveParent()
+
+    await expect(result).resolves.toBe('child-result')
+    expect(calls).toEqual(['parent', 'child'])
+  })
+
+  it('propagates parent action errors without calling the child action', async () => {
+    const parentError = new Error('parent failure')
+    const parent = {
+      $state: {},
+      save: () => Promise.reject(parentError)
+    }
+    const childAction = vi.fn()
+    const childStore: any = {
+      $id: 'child',
+      _customProperties: new Set(),
+      $state: {},
+      save: childAction
+    }
+
+    new StoreExtension(childStore, {
+      parentsStores: [{ build: () => parent }],
+      actionsToExtends: ['save']
+    } as any)
+
+    await expect(childStore.save()).rejects.toBe(parentError)
+    expect(childAction).not.toHaveBeenCalled()
+  })
+
+  it('calls parent and child Option API actions with their respective stores', () => {
+    const parent = {
+      $state: {},
+      save(this: any) {
+        this.parentCalled = true
+      }
+    }
+    const childStore: any = {
+      $id: 'child',
+      _customProperties: new Set(),
+      $state: {},
+      save(this: any) {
+        this.childCalled = true
+      }
+    }
+
+    new StoreExtension(childStore, {
+      parentsStores: [{ build: () => parent }],
+      actionsToExtends: ['save']
+    } as any)
+
+    childStore.save()
+
+    expect(parent).toMatchObject({ parentCalled: true })
+    expect(childStore).toMatchObject({ childCalled: true })
+    expect(parent).not.toHaveProperty('childCalled')
+    expect(childStore).not.toHaveProperty('parentCalled')
   })
 
   it('adds new actions with optional renaming and marks custom properties', () => {

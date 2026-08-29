@@ -1,20 +1,19 @@
-import { AnyObject } from "pinia-plugin-subscription"
 import { Comparison } from "./comparison"
 
-export interface CollectionState<T> {
+export interface CollectionState<T extends object = Record<string, unknown>> {
     items: T[]
 }
 
-export interface CollectionStoreMethods {
-    addItem: (item: AnyObject) => void
+export interface CollectionStoreMethods<T extends object = Record<string, unknown>> {
+    addItem: (item: T) => void
     clear: () => void
-    getItem: (criteria: SearchCollectionCriteria) => AnyObject | undefined
-    getItems: (criteria?: SearchCollectionCriteria, comparisonMode?: Comparison) => AnyObject[]
-    removeItem: (item: AnyObject) => void
-    setItems: <T>(items: T[]) => void
-    updateItem: (updatedItem: AnyObject, oldItem?: AnyObject) => void
+    getItem: (criteria: Partial<T>) => T | undefined
+    getItems: (criteria?: Partial<T>, comparisonMode?: Comparison) => T[]
+    removeItem: (item: T) => void
+    setItems: (items: T[]) => void
+    updateItem: (updatedItem: T, oldItem?: T) => void
 }
 
 export interface SearchCollectionCriteria {
-    [key: number | string | symbol]: boolean | number | string;
+    [key: number | string | symbol]: unknown;
 }

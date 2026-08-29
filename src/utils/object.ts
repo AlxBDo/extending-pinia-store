@@ -1,4 +1,3 @@
-import type { AnyObject } from "pinia-plugin-subscription";
 import type { Comparison, ComparisonNumber } from "../types/comparison";
 
 
@@ -9,31 +8,41 @@ const comparisonNumberFunctions: Record<ComparisonNumber, (num1: number, num2: n
     '<=': (num1: number, num2: number) => num1 <= num2
 }
 
-export function arrayObjectFindAllBy<T extends AnyObject>(
+export function arrayObjectFindAllBy<T extends object>(
     arrayOfObject: T[],
     findBy: Partial<T>,
     comparison: Comparison = 'strict'
 ): T[] {
     return arrayOfObject.filter(
-        (item: T) => Object.keys(findBy).every(
-            (key: string) => {
-                if (typeof findBy[key] === 'string') {
-                    const itemKey = typeof item[key] === 'string' ? item[key].toLowerCase() : item[key]
-                    const findByKey = findBy[key].toLowerCase()
+        (item: T) => (Object.entries(findBy) as [keyof T, T[keyof T]][]).every(
+            ([key, expectedValue]) => {
+                const itemValue = item[key]
 
-                    return comparison === 'strict' ? itemKey === findByKey : itemKey.includes(findByKey)
+                if (typeof expectedValue === 'string') {
+                    const normalizedExpectedValue = expectedValue.toLowerCase()
+                    const normalizedItemValue = typeof itemValue === 'string'
+                        ? itemValue.toLowerCase()
+                        : itemValue
+
+                    return comparison === 'strict'
+                        ? normalizedItemValue === normalizedExpectedValue
+                        : typeof normalizedItemValue === 'string' && normalizedItemValue.includes(normalizedExpectedValue)
                 }
 
-                if (typeof findBy[key] === 'number' && comparison !== 'strict' && comparison !== 'partial') {
-                    return comparisonNumberFunctions[comparison as ComparisonNumber](item[key], findBy[key])
+                if (typeof expectedValue === 'number' && typeof itemValue === 'number' && comparison !== 'strict' && comparison !== 'partial') {
+                    return comparisonNumberFunctions[comparison as ComparisonNumber](itemValue, expectedValue)
                 }
 
-                return findBy[key] == item[key]
+                return itemValue === expectedValue
             }
         )
     )
 }
 
-export function arrayObjectFindBy<T extends AnyObject>(arrayOfObject: T[], findBy: Partial<T>): T | undefined {
-    return arrayOfObject.find((item: T) => Object.keys(findBy).every((key: string) => item[key] === findBy[key]));
+export function arrayObjectFindBy<T extends object>(arrayOfObject: T[], findBy: Partial<T>): T | undefined {
+    return arrayOfObject.find(
+        (item: T) => (Object.entries(findBy) as [keyof T, T[keyof T]][]).every(
+            ([key, expectedValue]) => item[key] === expectedValue
+        )
+    )
 }
