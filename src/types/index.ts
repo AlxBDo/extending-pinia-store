@@ -24,7 +24,7 @@ export declare class ParentStore<
 }
 declare class StoreExtension extends Store { }
 declare class ExtendsPiniaStoreClass extends PluginSubscriber<StoreExtension> { }
-export declare const ExtendsPiniaStore: new () => ExtendsPiniaStoreClass;
+export declare const ExtendsPiniaStore: ExtendsPiniaStoreClass;
 
 /**
  * Stores
