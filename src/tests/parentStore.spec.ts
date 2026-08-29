@@ -6,9 +6,14 @@ describe('ParentStore', () => {
     const captured: string[] = []
     const storeFactory = (id: string): CustomStore<any, any> => { captured.push(id); return ({ $id: id, $state: {} } as unknown as CustomStore<any, any>) }
 
-    it('exposes the id via getter', () => {
-        const p = new ParentStore('parent', storeFactory)
-        expect(p.id).toBe('parent')
+    it('exposes the id and options via getters', () => {
+        const p1 = new ParentStore('parent', storeFactory)
+        expect(p1.id).toBe('parent')
+        expect(p1.options).toBeUndefined()
+
+        const options = { actionsToRename: { foo: 'bar' } }
+        const p2 = new ParentStore('parent', storeFactory, options)
+        expect(p2.options).toEqual(options)
     })
 
     it('builds a child store with concatenated id when childId provided', () => {

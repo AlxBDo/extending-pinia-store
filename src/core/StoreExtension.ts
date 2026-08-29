@@ -4,6 +4,8 @@ import type { StateTree, Store as PiniaStore } from "pinia";
 import type { CustomStore, StoreOptions } from "pinia-plugin-subscription/types";
 import type { CustomConsole } from "pinia-plugin-subscription";
 import type { ParentStoreInterface, PluginStoreOptions } from "../types/plugin";
+import type { ExtendedStoreOptions, ParentStoreOptions } from "../types/store";
+import { PluginConsole } from "../utils/pluginConsole";
 
 
 const extendedActionsDefault = ['removePersistedState', 'watch', '$reset']
@@ -24,25 +26,39 @@ function isPromiseLike(value: unknown): value is PromiseLike<unknown> {
 export default class StoreExtension extends Store {
     protected override _className: string = 'StoreExtension'
     private _extendedActions: Set<string>
-    private _parentsStores: CustomStore<Record<string, never>, StateTree>[] | undefined
+    private _parentsStores: CustomStore<Record<string, never>, StateTree>[] = []
+    private _parentsStoresOptionsMap: Map<string, ParentStoreOptions> = new Map<string, ParentStoreOptions>()
     protected static override _requiredKeys?: string[] | undefined = ['parentsStores']
+
+
+    get actionsToRename(): Record<string, string> | undefined {
+        return this.extensionOptions.actionsToRename
+    }
+
+    get extendedActions(): Set<string> {
+        return this._extendedActions
+    }
+
+    private get extensionOptions(): ExtendedStoreOptions {
+        return this.options as ExtendedStoreOptions
+    }
 
     private get extendedStore(): DynamicStore {
         return this.store as DynamicStore
     }
 
-    private get extensionOptions(): PluginStoreOptions {
-        return this.options as PluginStoreOptions
-    }
-
     get parentsStores(): CustomStore<Record<string, never>, StateTree>[] | undefined {
         this.extensionOptions.childId = this.extendedStore.$id
 
-        if (!this._parentsStores) {
+        if (!this._parentsStores.length) {
             this.buildParentStores()
         }
 
         return this._parentsStores
+    }
+
+    get propertiesToRename(): Record<string, string> | undefined {
+        return this.extensionOptions.propertiesToRename
     }
 
 
@@ -60,29 +76,25 @@ export default class StoreExtension extends Store {
     }
 
 
-    buildParentStores(): void {
-        this._parentsStores = this.extensionOptions.parentsStores?.map(
-            (store: ParentStoreInterface) => store.build(this.extensionOptions.childId ?? '') as CustomStore<Record<string, never>, StateTree>
-        )
-    }
-
-    get extendedActions(): Set<string> {
-        return this._extendedActions
-    }
-
-    get actionsToRename(): Record<string, string> | undefined {
-        return this.extensionOptions.actionsToRename
-    }
-
-    get propertiesToRename(): Record<string, string> | undefined {
-        return this.extensionOptions.propertiesToRename
-    }
-
     private addToCustomProperties(propertyName: string): void {
         if (!isProd) {
             this.extendedStore._customProperties = this.extendedStore._customProperties ?? new Set<string>()
                 ; (this.extendedStore._customProperties as Set<string>).add(propertyName)
         }
+    }
+
+    private buildParentStores(): void {
+        if (!this.extensionOptions.parentsStores?.length) {
+            return
+        }
+
+        this.extensionOptions.parentsStores.forEach((store: ParentStoreInterface) => {
+            const parentStore = store.build(this.extensionOptions.childId ?? '') as CustomStore<Record<string, never>, StateTree>
+            this._parentsStores?.push(parentStore)
+            if (store?.options && !this._parentsStoresOptionsMap.has(parentStore.$id)) {
+                this._parentsStoresOptionsMap.set(parentStore.$id, store.options)
+            }
+        })
     }
 
     private createComputed(store: DynamicStore, key: string) {
@@ -106,26 +118,35 @@ export default class StoreExtension extends Store {
      * Duplicates storeToExtend to extendedStore
      * @param storeToExtend
      */
-    private duplicateStore(storeToExtend: DynamicStore): void {
+    private duplicateStore(storeToExtend: DynamicStore, parentStoreOptions?: ParentStoreOptions): void {
         Object.keys(storeToExtend).forEach((key: string) => {
-            if (this.hasDeniedFirstChar(key[0] ?? '') && key !== '$reset') { return }
-
+            // Skip keys that have a denied first character : ['_', '$']
+            if (this.hasDeniedFirstChar(key)) { return }
             const typeOfProperty = typeof storeToExtend[key]
 
             if (this.storeHas(key)) {
-                if (this.extendedActions.has(key) && typeOfProperty === 'function') {
+                if (
+                    (this.extendedActions.has(key) || parentStoreOptions?.actionsToExtends?.includes(key))
+                    && typeOfProperty === 'function'
+                ) {
                     this.extendsAction(storeToExtend, key)
+                } else {
+                    PluginConsole.error(
+                        `Action "${key}" of "${storeToExtend.$id ?? 'unknown store'}" is not extended cause its all ready exists in the extended store.`,
+                        `
+Use the ParentStoreOptions : "actionsToExtends" option, to extend this action, or "actionsToRename" option to rename it.`
+                    )
                 }
             } else {
+                const childStoreActionName = this.getActionNameForChildStore(key, parentStoreOptions)
                 if (typeOfProperty === 'function') {
-                    const childStoreActionName = this.getActionNameForChildStore(key)
                     this.extendedStore[childStoreActionName] = storeToExtend[key]
                     this.addToCustomProperties(childStoreActionName)
                 } else if (typeOfProperty === 'object' && !Array.isArray(storeToExtend[key])) {
-                    this.extendedStore[key] = this.createComputed(storeToExtend, key)
-                    this.addToCustomProperties(key)
+                    this.extendedStore[childStoreActionName] = this.createComputed(storeToExtend, key)
+                    this.addToCustomProperties(childStoreActionName)
                 } else {
-                    this.extendedStore[key] = toRef(storeToExtend, key)
+                    this.extendedStore[childStoreActionName] = toRef(storeToExtend, key)
                 }
             }
         })
@@ -154,14 +175,22 @@ export default class StoreExtension extends Store {
         }
     }
 
-    private extendsState(storeToExtend: DynamicStore) {
+    private extendsState(storeToExtend: DynamicStore, parentStoreOptions?: ParentStoreOptions) {
         Object.keys(storeToExtend.$state).forEach((key: string) => {
-            if (!this.stateHas(key) && !this.hasDeniedFirstChar(key[0] ?? '')) {
-                const childStoreKey = this.getPropertyNameForChildState(key)
-                const state = this.state as DynamicState
-                this.extendedStore[childStoreKey] = state[childStoreKey] = toRef(storeToExtend.$state as DynamicState, key)
-                this.addToCustomProperties(childStoreKey)
+            if (this.hasDeniedFirstChar(key[0] ?? '')) return
+
+            const childStoreKey = this.getPropertyNameForChildState(key, parentStoreOptions)
+            if (this.stateHas(childStoreKey)) {
+                PluginConsole.error(
+                    `State property "${childStoreKey}" of "${storeToExtend.$id ?? 'unknown store'}" is not extended cause its all ready exists in the extended store.`,
+                    `\nUse the ParentStoreOptions: "propertiesToRename" option to rename it.`
+                )
+                return
             }
+
+            const state = this.state as DynamicState
+            this.extendedStore[childStoreKey] = state[childStoreKey] = toRef(storeToExtend.$state as DynamicState, key)
+            this.addToCustomProperties(childStoreKey)
         })
     }
 
@@ -184,27 +213,50 @@ export default class StoreExtension extends Store {
             storeToExtend.forEach((ste) => {
                 if (ste?.$state) {
                     const parentStore = ste as DynamicStore
-                    this.duplicateStore(parentStore)
-                    this.extendsState(parentStore)
+                    const parentStoreOptions = this._parentsStoresOptionsMap.get(parentStore.$id)
+                    this.duplicateStore(parentStore, parentStoreOptions)
+                    this.extendsState(parentStore, parentStoreOptions)
                 }
             })
         }
     }
 
-    private getActionNameForChildStore(parentStoreActionName: string): string {
-        return (this.actionsToRename && this.actionsToRename[parentStoreActionName]) ?? parentStoreActionName
+    private getActionNameForChildStore(
+        parentStoreActionName: string,
+        parentStoreOptions?: ParentStoreOptions
+    ): string {
+        if (parentStoreOptions?.actionsToRename && parentStoreOptions.actionsToRename[parentStoreActionName]) {
+            return parentStoreOptions.actionsToRename[parentStoreActionName]
+        }
+
+        if (this.actionsToRename && this.actionsToRename[parentStoreActionName]) {
+            return this.actionsToRename[parentStoreActionName]
+        }
+
+        return parentStoreActionName
     }
 
-    private getPropertyNameForChildState(property: string): string {
-        return (this.propertiesToRename && this.propertiesToRename[property]) ?? property
-    }
+    private getPropertyNameForChildState(
+        property: string,
+        parentsStoresOptions?: ParentStoreOptions
+    ): string {
+        if (parentsStoresOptions?.propertiesToRename && parentsStoresOptions.propertiesToRename[property]) {
+            return parentsStoresOptions.propertiesToRename[property]
+        }
 
-    private initExtendedActions(): Set<string> {
-        return new Set<string>([...extendedActionsDefault, ...(this.extensionOptions?.actionsToExtends ?? [])])
+        if (this.propertiesToRename && this.propertiesToRename[property]) {
+            return this.propertiesToRename[property]
+        }
+
+        return property
     }
 
     protected static hasRequiredKeys(options: Record<string, unknown>): boolean {
         return Array.isArray(options?.parentsStores) && options.parentsStores.length > 0
+    }
+
+    private initExtendedActions(): Set<string> {
+        return new Set<string>([...extendedActionsDefault, ...(this.extensionOptions?.actionsToExtends ?? [])])
     }
 
     private resetParentStores(): void {

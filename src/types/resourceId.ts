@@ -1,6 +1,6 @@
 export interface ResourceId {
   "@id"?: string;
-  id?: number;
+  id?: number | string;
 }
 
 export interface ResourceIdStore {

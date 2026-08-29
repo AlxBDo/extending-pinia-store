@@ -8,7 +8,8 @@ import type { ResourceId } from "../types/resourceId";
 
 export type {
     ExtendedStore,
-    ExtendedStoreOptions
+    ExtendedStoreOptions,
+    ParentStoreOptions
 } from "./store";
 
 export declare class ParentStore<
@@ -17,8 +18,10 @@ export declare class ParentStore<
 > implements ParentStoreInterface<TStore, TState> {
     private _storeConstructor;
     private _id;
+    private _storeOptions?;
     get id(): string;
-    constructor(id: string, store: ParentStoreType<TStore, TState>);
+    get options(): import("./store").ParentStoreOptions | undefined;
+    constructor(id: string, store: ParentStoreType<TStore, TState>, storeOptions?: import("./store").ParentStoreOptions);
     build(childId?: string): ParentStoreResult<TStore, TState>;
 }
 declare class StoreExtension extends Store { }

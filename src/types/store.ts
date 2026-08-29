@@ -25,3 +25,5 @@ export type ExtendedStore<
     TStore extends object = Record<string, never>,
     TState extends StateTree = StateTree
 > = CustomStore<TStore, TState> & ExtendedStoreOptions & ExtendedStoreActions
+
+export type ParentStoreOptions = Omit<ExtendedStoreOptions, 'childId' | 'parentsStores'>

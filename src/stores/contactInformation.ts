@@ -27,7 +27,7 @@ export const useContactInformationStore = (
 
 
     function addContactInformation(name: string, type: string, value: ContactInformationValue, id?: number): void {
-        getStore().addItem({ id, '@id': id === undefined ? name : undefined, name, type, value })
+        getStore().addItem({ id: id ?? name, name, type, value })
     }
 
     function addEmail(name: string, value: string, id?: number) {
@@ -49,7 +49,7 @@ export const useContactInformationStore = (
     }
 
     function getContactInformationValue(id: string): ContactInformationValue | undefined {
-        return (getContactInformation({ '@id': id }) as ContactInformation | undefined)?.value
+        return (getContactInformation({ id }) as ContactInformation | undefined)?.value
     }
 
     function getStore() {
