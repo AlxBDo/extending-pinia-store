@@ -45,7 +45,7 @@ jobs:
         run: npm ci
 
       - name: Check types
-        run: npx vue-tsc --noEmit -p tsconfig.app.json
+        run: npx vue-tsc --noEmit -p tsconfig.typecheck.json
 
   audit:
     runs-on: ubuntu-latest

@@ -1,14 +1,15 @@
-import { defineAStoreCtx, SearchCollectionCriteria, getEnhancedStore } from "pinia-plugin-subscription";
+import { defineAStoreCtx, getEnhancedStore } from "pinia-plugin-subscription";
 import { useCollectionStore } from './collection'
 import ParentStore from '../plugins/parentStore'
 import type { CollectionState, CollectionStoreMethods } from '../types/collection'
 import type { ContactInformation, ContactInformationValue } from '../types/contactInformation'
+import type { SearchCollectionCriteria } from '../types/collection'
 import { computed } from "vue";
 
 
 export const useContactInformationStore = (
     id: string
-) => defineAStoreCtx<CollectionStoreMethods, CollectionState<ContactInformation>>(id, (ctx) => {
+) => defineAStoreCtx<CollectionStoreMethods<ContactInformation>, CollectionState<ContactInformation>>(id, (ctx) => {
     const email = computed({
         get: () => getContactInformationValue('email'),
         set: (value: string) => addEmail('email', value)
@@ -25,34 +26,34 @@ export const useContactInformationStore = (
     })
 
 
-    function addContactInformation(name: string, type: string, value: ContactInformationValue, id?: string | number): void {
-        getStore().addItem({ id: id ?? name, name, type, value })
+    function addContactInformation(name: string, type: string, value: ContactInformationValue, id?: number): void {
+        getStore().addItem({ id, '@id': id === undefined ? name : undefined, name, type, value })
     }
 
-    function addEmail(name: string, value: string, id?: string | number) {
+    function addEmail(name: string, value: string, id?: number) {
         addContactInformation(name, 'email', value, id)
     }
 
-    function addMobilePhone(name: string, value: string, id?: string | number) {
+    function addMobilePhone(name: string, value: string, id?: number) {
         addContactInformation(name, 'mobile-phone', value, id)
     }
 
-    function addPhone(name: string, value: string, id?: string | number) {
+    function addPhone(name: string, value: string, id?: number) {
         addContactInformation(name, 'phone', value, id)
     }
 
-    function getContactInformation(criteria: SearchCollectionCriteria): ContactInformation | ContactInformation[] {
+    function getContactInformation(criteria: SearchCollectionCriteria): ContactInformation | ContactInformation[] | undefined {
         return criteria.id
-            ? (getStore().getItem(criteria) as ContactInformation)
-            : (getStore().getItems(criteria) as ContactInformation[])
+            ? getStore().getItem(criteria)
+            : getStore().getItems(criteria)
     }
 
-    function getContactInformationValue(id: string): ContactInformationValue {
-        return (getContactInformation({ id }) as ContactInformation)?.value
+    function getContactInformationValue(id: string): ContactInformationValue | undefined {
+        return (getContactInformation({ '@id': id }) as ContactInformation | undefined)?.value
     }
 
     function getStore() {
-        return getEnhancedStore<CollectionStoreMethods & CollectionState<ContactInformation>>(ctx)
+        return getEnhancedStore<CollectionStoreMethods<ContactInformation> & CollectionState<ContactInformation>>(ctx)
     }
 
 

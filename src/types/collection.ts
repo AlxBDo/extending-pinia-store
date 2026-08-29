@@ -1,4 +1,4 @@
-import { Comparison } from "./comparison"
+import type { Comparison } from "./comparison"
 
 export interface CollectionState<T extends object = Record<string, unknown>> {
     items: T[]

@@ -1,4 +1,4 @@
-import { SearchCollectionCriteria } from './collection'
+import type { SearchCollectionCriteria } from './collection'
 import type { ResourceId } from './resourceId'
 
 export interface ContactInformation extends ResourceId {
@@ -18,7 +18,7 @@ export interface ContactInformationStore {
     addEmail(name: string, value: string): void
     addMobilePhone(name: string, value: string): void
     addPhone(name: string, value: string): void
-    getContactInformation(criteria: SearchCollectionCriteria): ContactInformation | ContactInformation[]
+    getContactInformation(criteria: SearchCollectionCriteria): ContactInformation | ContactInformation[] | undefined
     getContactInformationValue(id: string): ContactInformationValue
 }
 

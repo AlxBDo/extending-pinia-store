@@ -2,7 +2,6 @@ import type { CustomConsole, PluginSubscriber, Store } from "pinia-plugin-subscr
 import type { StateTree } from "pinia";
 import type { CollectionState, CollectionStoreMethods } from "../types/collection";
 import type { Comparison } from "../types/comparison";
-import type { IdentityState } from "../types/identity";
 import type { IError } from "../types/error";
 import type { ParentStoreInterface, ParentStore as ParentStoreType, ParentStoreResult } from "../types/plugin";
 import type { ResourceId } from "../types/resourceId";

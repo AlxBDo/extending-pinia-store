@@ -9,6 +9,7 @@ import type { ParentStoreInterface, PluginStoreOptions } from "../types/plugin";
 const extendedActionsDefault = ['removePersistedState', 'watch', '$reset']
 
 type DynamicStore = PiniaStore & Record<string, unknown>
+type DynamicState = StateTree & Record<string, unknown>
 
 const isProd = import.meta.env.PROD
 
@@ -157,7 +158,8 @@ export default class StoreExtension extends Store {
         Object.keys(storeToExtend.$state).forEach((key: string) => {
             if (!this.stateHas(key) && !this.hasDeniedFirstChar(key[0] ?? '')) {
                 const childStoreKey = this.getPropertyNameForChildState(key)
-                this.extendedStore[childStoreKey] = this.state[childStoreKey] = toRef(storeToExtend.$state, key)
+                const state = this.state as DynamicState
+                this.extendedStore[childStoreKey] = state[childStoreKey] = toRef(storeToExtend.$state as DynamicState, key)
                 this.addToCustomProperties(childStoreKey)
             }
         })
