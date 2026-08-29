@@ -20,7 +20,7 @@ export declare class ParentStore implements ParentStoreInterface {
 }
 declare class StoreExtension extends Store { }
 declare class ExtendsPiniaStoreClass extends PluginSubscriber<StoreExtension> { }
-export declare const ExtendsPiniaStore: new () => ExtendsPiniaStoreClass;
+export declare const ExtendsPiniaStore: ExtendsPiniaStoreClass;
 
 /**
  * Stores
@@ -84,7 +84,7 @@ export declare const useWebUserStore: (id?: string) => import("pinia").Store<str
 /**
  * Utils
  */
-export declare const pluginName: string;
+export declare const PLUGIN_NAME: string;
 export declare function arrayObjectFindAllBy<T extends AnyObject>(arrayOfObject: T[], findBy: Partial<T>, comparison?: Comparison): T[];
 export declare function arrayObjectFindBy<T extends AnyObject>(arrayOfObject: T[], findBy: Partial<T>): T | undefined;
 declare class PluginConsoleClass extends CustomConsole {
