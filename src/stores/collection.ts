@@ -1,23 +1,24 @@
 import { defineStore } from "pinia";
-import type { AnyObject } from "pinia-plugin-subscription";
 import { arrayObjectFindAllBy, arrayObjectFindBy } from '../utils/object'
 import type { Comparison } from "../types/comparison";
 import type { CollectionState, SearchCollectionCriteria } from "../types/collection";
 
 
-function getItemCriteria(item: AnyObject): SearchCollectionCriteria {
+type CollectionItem = Record<string, unknown>
+
+function getItemCriteria(item: CollectionItem): SearchCollectionCriteria {
     return item.id ? { id: item.id } : { '@id': item['@id'] }
 }
 
 
 export const useCollectionStore = (id?: string) => defineStore(id ?? 'collectionStore', {
-    state: (): CollectionState<AnyObject> => ({
+    state: (): CollectionState<CollectionItem> => ({
         items: []
     }),
 
     actions: {
-        addItem(item: AnyObject) {
-            let foundedItem: AnyObject | undefined
+        addItem(item: CollectionItem) {
+            let foundedItem: CollectionItem | undefined
 
             if (item.id || item['@id']) {
                 foundedItem = this.getItem(
@@ -37,36 +38,36 @@ export const useCollectionStore = (id?: string) => defineStore(id ?? 'collection
             this.items = []
         },
 
-        getItem(criteria: Partial<AnyObject>): AnyObject | undefined {
-            return arrayObjectFindBy<AnyObject>(
-                this.items as AnyObject[],
-                criteria as Partial<AnyObject> & SearchCollectionCriteria
+        getItem(criteria: Partial<CollectionItem>): CollectionItem | undefined {
+            return arrayObjectFindBy<CollectionItem>(
+                this.items,
+                criteria
             )
         },
 
-        getItems(criteria?: Partial<AnyObject>, comparisonMode: Comparison = 'strict'): AnyObject[] {
+        getItems(criteria?: Partial<CollectionItem>, comparisonMode: Comparison = 'strict'): CollectionItem[] {
             if (!criteria) {
                 return this.items
             }
 
-            return arrayObjectFindAllBy<AnyObject>(
-                this.items as AnyObject[],
-                criteria as Partial<AnyObject> & SearchCollectionCriteria,
+            return arrayObjectFindAllBy<CollectionItem>(
+                this.items,
+                criteria,
                 comparisonMode
             )
         },
 
-        removeItem(item: AnyObject) {
-            this.items = this.items.filter((i: AnyObject) => i.id !== item.id)
+        removeItem(item: CollectionItem) {
+            this.items = this.items.filter((i) => i.id !== item.id)
         },
 
-        setItems<T>(items: T[]) {
+        setItems(items: CollectionItem[]) {
             if (Array.isArray(items)) {
-                this.items = items as AnyObject[]
+                this.items = items
             }
         },
 
-        updateItem(updatedItem: AnyObject, oldItem?: AnyObject) {
+        updateItem(updatedItem: CollectionItem, oldItem?: CollectionItem) {
             if (!oldItem) {
                 oldItem = this.getItem(getItemCriteria(updatedItem))
             }

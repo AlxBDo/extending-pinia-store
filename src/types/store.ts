@@ -1,7 +1,7 @@
-import type { _StoreWithGetters } from "pinia";
+import type { StateTree } from "pinia";
 import type { Ref } from "vue";
 import type { CustomStore } from "pinia-plugin-subscription";
-import type { ActionFlows, ParentStoreInterface } from "./plugin";
+import type { ParentStoreInterface } from "./plugin";
 
 
 export interface ExtendedStoreActions {
@@ -9,9 +9,9 @@ export interface ExtendedStoreActions {
 }
 
 export interface ExtendedStoreOptions {
-    actionFlows?: ActionFlows
     actionsToExtends?: string[]
     actionsToRename?: Record<string, string>
+    childId?: string
     parentsStores?: ParentStoreInterface[]
     propertiesToRename?: Record<string, string>
 }
@@ -21,4 +21,9 @@ export interface ExtendedState {
     isOptionApi?: boolean | Ref<boolean | undefined>
 }
 
-export type ExtendedStore<TStore, TState> = CustomStore<TStore, TState> & ExtendedStoreOptions & ExtendedStoreActions
+export type ExtendedStore<
+    TStore extends object = Record<string, never>,
+    TState extends StateTree = StateTree
+> = CustomStore<TStore, TState> & ExtendedStoreOptions & ExtendedStoreActions
+
+export type ParentStoreOptions = Omit<ExtendedStoreOptions, 'childId' | 'parentsStores'>

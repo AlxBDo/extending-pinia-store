@@ -1,4 +1,4 @@
-import type { List } from "../models/liste";
+import type { List } from "../models/list";
 
 
 export type PartialList = Omit<List, '@id' | 'id' | 'name' | 'type'> & { id?: number, name?: string, type?: ListTypes }

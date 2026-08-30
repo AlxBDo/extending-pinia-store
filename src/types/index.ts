@@ -1,22 +1,28 @@
-import type { AnyObject, CustomConsole, CustomStore, PluginSubscriber, Store } from "pinia-plugin-subscription";
+import type { CustomConsole, PluginSubscriber, Store } from "pinia-plugin-subscription";
+import type { StateTree } from "pinia";
 import type { CollectionState, CollectionStoreMethods } from "../types/collection";
 import type { Comparison } from "../types/comparison";
-import type { IdentityState } from "../types/identity";
 import type { IError } from "../types/error";
-import type { ParentStoreInterface, ParentStore as ParentStoreType } from "../types/plugin";
+import type { ParentStoreInterface, ParentStore as ParentStoreType, ParentStoreResult } from "../types/plugin";
 import type { ResourceId } from "../types/resourceId";
 
 export type {
     ExtendedStore,
-    ExtendedStoreOptions
+    ExtendedStoreOptions,
+    ParentStoreOptions
 } from "./store";
 
-export declare class ParentStore implements ParentStoreInterface {
+export declare class ParentStore<
+    TStore extends object = Record<string, never>,
+    TState extends StateTree = StateTree
+> implements ParentStoreInterface<TStore, TState> {
     private _storeConstructor;
     private _id;
+    private _storeOptions?;
     get id(): string;
-    constructor(id: string, store: ParentStoreType);
-    build(childId: string): CustomStore<AnyObject, AnyObject>;
+    get options(): import("./store").ParentStoreOptions | undefined;
+    constructor(id: string, store: ParentStoreType<TStore, TState>, storeOptions?: import("./store").ParentStoreOptions);
+    build(childId?: string): ParentStoreResult<TStore, TState>;
 }
 declare class StoreExtension extends Store { }
 declare class ExtendsPiniaStoreClass extends PluginSubscriber<StoreExtension> { }
@@ -25,14 +31,14 @@ export declare const ExtendsPiniaStore: ExtendsPiniaStoreClass;
 /**
  * Stores
  */
-export declare const useCollectionStore: (id?: string) => import("pinia").Store<string, CollectionState<AnyObject>, {}, {
-    addItem(item: AnyObject): void;
+export declare const useCollectionStore: (id?: string) => import("pinia").Store<string, CollectionState<Record<string, unknown>>, {}, {
+    addItem(item: Record<string, unknown>): void;
     clear(): void;
-    getItem(criteria: Partial<AnyObject>): AnyObject | undefined;
-    getItems(criteria?: Partial<AnyObject>, comparisonMode?: Comparison): AnyObject[];
-    removeItem(item: AnyObject): void;
-    setItems<T>(items: T[]): void;
-    updateItem(updatedItem: AnyObject, oldItem?: AnyObject): void;
+    getItem(criteria: Partial<Record<string, unknown>>): Record<string, unknown> | undefined;
+    getItems(criteria?: Partial<Record<string, unknown>>, comparisonMode?: Comparison): Record<string, unknown>[];
+    removeItem(item: Record<string, unknown>): void;
+    setItems(items: Record<string, unknown>[]): void;
+    updateItem(updatedItem: Record<string, unknown>, oldItem?: Record<string, unknown>): void;
 }>;
 export declare const useContactInformationStore: (id: string) => import("pinia").Store<string, import("pinia").StateTree, import("pinia")._GettersTree<import("pinia").StateTree>, import("pinia")._ActionsTree>;
 type omitActions = 'clear' | 'getItem' | 'getItems' | 'removeItem' | 'setItems';
@@ -85,8 +91,8 @@ export declare const useWebUserStore: (id?: string) => import("pinia").Store<str
  * Utils
  */
 export declare const PLUGIN_NAME: string;
-export declare function arrayObjectFindAllBy<T extends AnyObject>(arrayOfObject: T[], findBy: Partial<T>, comparison?: Comparison): T[];
-export declare function arrayObjectFindBy<T extends AnyObject>(arrayOfObject: T[], findBy: Partial<T>): T | undefined;
+export declare function arrayObjectFindAllBy<T extends object>(arrayOfObject: T[], findBy: Partial<T>, comparison?: Comparison): T[];
+export declare function arrayObjectFindBy<T extends object>(arrayOfObject: T[], findBy: Partial<T>): T | undefined;
 declare class PluginConsoleClass extends CustomConsole {
     protected _pluginName: string;
 }

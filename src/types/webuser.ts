@@ -1,4 +1,4 @@
-import { ResourceId, ResourceIdStore } from "./resourceId"
+import type { ResourceId, ResourceIdStore } from "./resourceId"
 
 export interface WebUserStore extends ResourceIdStore {
     setData: (data: Partial<WebUserState>) => void

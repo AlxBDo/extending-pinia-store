@@ -49,12 +49,29 @@ app.mount('#app')
 
 ### Store options (API)
 
-The plugin uses an extended store options shape defined in `src/types/store.ts`. Important fields:
+The plugin uses an extended store options shape defined in `src/types/store.ts`.
 
-- `actionsToExtends?: string[]` — list of parent actions that should be extended/merged into the child.
-- `actionsToRename?: Record<string, string>` — rename parent actions when adding them to the child.
+#### Store-level options (`ExtendedStoreOptions`)
 - `parentsStores: ParentStoreInterface[]` — array of `ParentStore` instances describing parent stores to include.
-- `propertiesToRename?: Record<string, string>` — rename parent state properties when adding them to the child.
+- `actionsToExtends?: string[]` — default list of parent actions that should be chained/merged into the child.
+- `actionsToRename?: Record<string, string>` — *(Deprecated: use `ParentStoreOptions` instead)* rename parent actions when adding them to the child.
+- `propertiesToRename?: Record<string, string>` — *(Deprecated: use `ParentStoreOptions` instead)* rename parent state properties when adding them to the child.
+
+#### Per-parent options (`ParentStoreOptions`)
+You can pass options directly to each `ParentStore` as a 3rd constructor parameter:
+`new ParentStore(id, storeConstructor, parentStoreOptions)`:
+
+- `actionsToRename?: Record<string, string>` — rename parent actions specifically for this parent store. Takes priority over store-level `actionsToRename`.
+- `propertiesToRename?: Record<string, string>` — rename parent state properties specifically for this parent store. Takes priority over store-level `propertiesToRename`.
+- `actionsToExtends?: string[]` — list of actions from this specific parent store to chain/merge with the child.
+
+#### Action chaining behavior
+When an action exists on both a parent and child store and is listed in `actionsToExtends` (either store-level or on `ParentStoreOptions`), the parent action runs first. If it returns a promise, the child action runs only after that promise resolves. Parent errors are propagated and prevent the child action from running. The chained action returns the child action's result.
+
+#### Conflict handling & diagnostics
+If an action or state property from a parent store already exists on the child store and is not marked in `actionsToExtends` or renamed:
+- The conflict is detected without overwriting the child store property.
+- A descriptive error is logged in the console via `PluginConsole` explaining which property conflicted and recommending to use `actionsToRename`, `propertiesToRename`, or `actionsToExtends`.
 
 ### Examples
 
@@ -129,6 +146,38 @@ export const useUserStore = (id?: string) => defineAStoreCtx<UserStore, UserStat
 Notes:
 - `actionsToExtends: ['setData']` tells the extension logic to merge or chain the `setData` action from parents into the child.
 - `ParentStore('userContact', useContactStore)` will build an actual parent store id by concatenating `'userContact'` with the child id (so the child can extend a per-child parent).
+
+#### Multiple parent stores example (composing multiple stores without collisions)
+
+```ts
+import ParentStore from 'pinia-plugin-extending-store'
+import { defineAStore, useCollectionStore } from 'pinia-plugin-extending-store'
+
+export const useListsStore = (id?: string) => defineAStore(
+  id ?? 'lists',
+  () => ({}),
+  {
+    parentsStores: [
+      new ParentStore(
+        'listsCollection',
+        useCollectionStore,
+        {
+          actionsToRename: { addItem: 'addList', getItems: 'getLists', setItems: 'setLists' },
+          propertiesToRename: { items: 'lists' }
+        }
+      ),
+      new ParentStore(
+        (id ?? 'lists') + 'UserCollection',
+        useCollectionStore,
+        {
+          actionsToRename: { addItem: 'addUser', getItems: 'getUsers', setItems: 'setUsers' },
+          propertiesToRename: { items: 'users' }
+        }
+      )
+    ]
+  }
+)()
+```
 
 ### Using a store in a Vue component
 

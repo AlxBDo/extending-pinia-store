@@ -1,9 +1,9 @@
 import StoreExtension from "../core/StoreExtension";
-import { PluginSubscriber, PluginSubscriberInterface, StoreOptions } from "pinia-plugin-subscription";
+import { PluginSubscriber } from "pinia-plugin-subscription/helpers";
 import { PluginConsole } from "../utils/pluginConsole";
-import { ExtendedStoreActions, ExtendedStoreOptions } from "../types/store";
+import type { ExtendedStoreActions } from "../types/store";
 import { pluginName } from "../utils/constantes";
-import { Store } from "pinia";
+import type { Store } from "pinia";
 
 
 class ExtendsPiniaStore extends PluginSubscriber<StoreExtension> {

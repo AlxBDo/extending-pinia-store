@@ -9,7 +9,7 @@ import type { ErrorsState, IError } from "../types/error";
 
 type omitActions = 'clear' | 'getItem' | 'getItems' | 'removeItem' | 'setItems'
 
-export interface ErrorsStore<TError extends IError = IError> extends Omit<CollectionStoreMethods, omitActions> {
+export interface ErrorsStore<TError extends IError = IError> extends Omit<CollectionStoreMethods<TError>, omitActions> {
     addError: (error: TError) => void
     clearErrors: () => void
     getError: (errorId: { id: string }) => TError | undefined
@@ -23,7 +23,7 @@ export interface ErrorsStore<TError extends IError = IError> extends Omit<Collec
 
 
 export const useErrorsStore = <TError extends IError = IError>(id: string) =>
-    defineAStoreCtx<ErrorsStore, ErrorsState<TError>>(
+    defineAStoreCtx<ErrorsStore<TError>, ErrorsState<TError>>(
         id,
         (ctx) => {
             function addError(error: TError): void {
@@ -49,7 +49,7 @@ export const useErrorsStore = <TError extends IError = IError>(id: string) =>
             }
 
             function getStore() {
-                return getEnhancedStore<ErrorsStore & ErrorsState<TError>>(ctx)
+                return getEnhancedStore<ErrorsStore<TError> & ErrorsState<TError>>(ctx)
             }
 
             function hasError(level: number = 0): boolean {

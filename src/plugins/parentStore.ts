@@ -1,19 +1,25 @@
-import type { AnyObject, CustomStore } from "pinia-plugin-subscription"
-import type { ParentStoreInterface, ParentStore as ParentStoreType } from "../types/plugin"
+import type { StateTree } from "pinia"
+import type { ParentStoreInterface, ParentStore as ParentStoreType, ParentStoreResult } from "../types/plugin"
+import type { ParentStoreOptions } from "../types/store";
 
-export default class ParentStore implements ParentStoreInterface {
-    private _storeConstructor: ParentStoreType
+export default class ParentStore<
+    TStore extends object = Record<string, never>,
+    TState extends StateTree = StateTree
+> implements ParentStoreInterface<TStore, TState> {
+    private _storeConstructor: ParentStoreType<TStore, TState>
     private _id: string
+    private _storeOptions?: ParentStoreOptions
 
     get id(): string { return this._id }
+    get options(): ParentStoreOptions | undefined { return this._storeOptions }
 
-    constructor(id: string, store: ParentStoreType) {
+    constructor(id: string, store: ParentStoreType<TStore, TState>, storeOptions?: ParentStoreOptions) {
         this._storeConstructor = store
         this._id = id
+        this._storeOptions = storeOptions
     }
 
-    build(childId: string) {
-        childId = childId ? `${childId.substring(0, 1)}${childId.substring(1)}` : ''
-        return this._storeConstructor(`${this._id}${childId}`) as CustomStore<AnyObject, AnyObject>
+    build(childId?: string): ParentStoreResult<TStore, TState> {
+        return this._storeConstructor(`${this._id}${childId ?? ''}`)
     }
 }
