@@ -15,14 +15,6 @@ type DynamicState = StateTree & Record<string, unknown>
 
 const isProd = import.meta.env.PROD
 
-function isPromiseLike(value: unknown): value is PromiseLike<unknown> {
-    return (
-        (typeof value === 'object' || typeof value === 'function') &&
-        value !== null &&
-        typeof (value as PromiseLike<unknown>).then === 'function'
-    )
-}
-
 export default class StoreExtension extends Store {
     protected override _className: string = 'StoreExtension'
     private _extendedActions: Set<string>
@@ -90,7 +82,7 @@ export default class StoreExtension extends Store {
 
         this.extensionOptions.parentsStores.forEach((store: ParentStoreInterface) => {
             const parentStore = store.build(this.extensionOptions.childId ?? '') as CustomStore<Record<string, never>, StateTree>
-            this._parentsStores?.push(parentStore)
+            this._parentsStores.push(parentStore)
             if (store?.options && !this._parentsStoresOptionsMap.has(parentStore.$id)) {
                 this._parentsStoresOptionsMap.set(parentStore.$id, store.options)
             }
@@ -122,8 +114,8 @@ export default class StoreExtension extends Store {
         Object.keys(storeToExtend).forEach((key: string) => {
             // Skip keys that have a denied first character : ['_', '$']
             if (this.hasDeniedFirstChar(key)) { return }
-            const typeOfProperty = typeof storeToExtend[key]
 
+            const typeOfProperty = typeof storeToExtend[key]
             if (this.storeHas(key)) {
                 if (
                     (this.extendedActions.has(key) || parentStoreOptions?.actionsToExtends?.includes(key))
@@ -158,20 +150,19 @@ Use the ParentStoreOptions : "actionsToExtends" option, to extend this action, o
      * @param key
      */
     private extendsAction(storeToExtend: DynamicStore, key: string): void {
-        const parentAction = storeToExtend[key]
-        const childAction = this.extendedStore[key]
+        const parentAction = storeToExtend[key] as (...args: unknown[]) => unknown
+        const childAction = this.extendedStore[key] as (...args: unknown[]) => unknown
 
-        if (typeof parentAction !== 'function' || typeof childAction !== 'function') {
-            throw new TypeError(`Cannot extend "${key}": both parent and child properties must be actions.`)
-        }
-
-        this.extendedStore[key] = function (this: DynamicStore, ...args: unknown[]) {
-            const parentResult = parentAction.apply(storeToExtend, args)
-            const executeChildAction = () => childAction.apply(this, args)
-
-            return isPromiseLike(parentResult)
-                ? Promise.resolve(parentResult).then(executeChildAction)
-                : executeChildAction()
+        if (this.isOptionApi()) {
+            this.extendedStore[key] = function (this: DynamicStore, ...args: unknown[]) {
+                parentAction.apply(this, args)
+                childAction.apply(this, args)
+            }
+        } else {
+            this.extendedStore[key] = (...args: unknown[]) => {
+                parentAction(...args)
+                childAction(...args)
+            }
         }
     }
 
@@ -205,31 +196,29 @@ Use the ParentStoreOptions : "actionsToExtends" option, to extend this action, o
             this.extensionOptions
         ])
 
-        if (this.parentsStores) {
-            const storeToExtend = this.parentsStores
+        const storeToExtend = this.parentsStores
 
-            if (!storeToExtend || !storeToExtend.length) { return }
+        if (!storeToExtend?.length) { return }
 
-            storeToExtend.forEach((ste) => {
-                if (ste?.$state) {
-                    const parentStore = ste as DynamicStore
-                    const parentStoreOptions = this._parentsStoresOptionsMap.get(parentStore.$id)
-                    this.duplicateStore(parentStore, parentStoreOptions)
-                    this.extendsState(parentStore, parentStoreOptions)
-                }
-            })
-        }
+        storeToExtend.forEach((ste) => {
+            if (ste?.$state) {
+                const parentStore = ste as DynamicStore
+                const parentStoreOptions = this._parentsStoresOptionsMap.get(parentStore.$id)
+                this.duplicateStore(parentStore, parentStoreOptions)
+                this.extendsState(parentStore, parentStoreOptions)
+            }
+        })
     }
 
     private getActionNameForChildStore(
         parentStoreActionName: string,
         parentStoreOptions?: ParentStoreOptions
     ): string {
-        if (parentStoreOptions?.actionsToRename && parentStoreOptions.actionsToRename[parentStoreActionName]) {
+        if (parentStoreOptions?.actionsToRename?.[parentStoreActionName]) {
             return parentStoreOptions.actionsToRename[parentStoreActionName]
         }
 
-        if (this.actionsToRename && this.actionsToRename[parentStoreActionName]) {
+        if (this.actionsToRename?.[parentStoreActionName]) {
             return this.actionsToRename[parentStoreActionName]
         }
 
@@ -244,7 +233,7 @@ Use the ParentStoreOptions : "actionsToExtends" option, to extend this action, o
             return parentsStoresOptions.propertiesToRename[property]
         }
 
-        if (this.propertiesToRename && this.propertiesToRename[property]) {
+        if (this.propertiesToRename?.[property]) {
             return this.propertiesToRename[property]
         }
 

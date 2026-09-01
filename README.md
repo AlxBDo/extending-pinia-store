@@ -66,7 +66,7 @@ You can pass options directly to each `ParentStore` as a 3rd constructor paramet
 - `actionsToExtends?: string[]` — list of actions from this specific parent store to chain/merge with the child.
 
 #### Action chaining behavior
-When an action exists on both a parent and child store and is listed in `actionsToExtends` (either store-level or on `ParentStoreOptions`), the parent action runs first. If it returns a promise, the child action runs only after that promise resolves. Parent errors are propagated and prevent the child action from running. The chained action returns the child action's result.
+When an action exists on both a parent and child store and is listed in `actionsToExtends` (either store-level or on `ParentStoreOptions`), the parent action runs first, then the child action runs right after — synchronously, without waiting for the parent action's result even if it returns a promise. The chained action does not return a value.
 
 #### Conflict handling & diagnostics
 If an action or state property from a parent store already exists on the child store and is not marked in `actionsToExtends` or renamed:

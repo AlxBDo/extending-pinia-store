@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.1.3] - 2026-09-01
+
+### Fixed
+- **Regression from v0.1.2**: reverted `StoreExtension.extendsAction` to its pre-v0.1.2 synchronous, fire-and-forget behavior. The v0.1.2 rewrite added a proactive `TypeError` thrown synchronously during store construction when the parent/child action wasn't (yet) a function, and introduced promise-based chaining (awaiting the parent action before running the child, propagating parent errors, returning the child's result). In real apps where the child store's own action isn't assigned yet at the moment `StoreExtension` builds the store (e.g. actions provided by another Pinia plugin not yet applied), this made the constructor throw, breaking `getEnhancedStore` for the whole store. The action is now wrapped exactly as in v0.1.1: parent action runs, then child action runs right after, synchronously, with no promise awaiting, no proactive type checks, and no return value.
+
 ## [v0.1.2] - 2026-08-30
 
 ### Added

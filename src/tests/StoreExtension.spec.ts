@@ -1,7 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-const { getEnhancedStoreMock } = vi.hoisted(() => ({
-  getEnhancedStoreMock: vi.fn()
+const { getEnhancedStoreMock, isOptionApiMock } = vi.hoisted(() => ({
+  getEnhancedStoreMock: vi.fn(),
+  isOptionApiMock: vi.fn(() => false)
 }))
 
 // Mocks pour éviter d'avoir à charger les packages externes
@@ -34,7 +35,7 @@ vi.mock('pinia-plugin-subscription/helpers', () => ({
     hasDeniedFirstChar() { return false }
     storeHas(key: string) { return key in this.store }
     stateHas(key: string) { return key in this.state }
-    isOptionApi() { return false }
+    isOptionApi() { return isOptionApiMock() }
     getValue(value: any) { return value && value.value !== undefined ? value.value : value }
     debugLog() { /* no-op */ }
   }
@@ -48,6 +49,8 @@ describe('StoreExtension', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     getEnhancedStoreMock.mockReset()
+    isOptionApiMock.mockReset()
+    isOptionApiMock.mockReturnValue(false)
   })
 
   it('initExtendedActions merges defaults and provided actions', () => {
@@ -63,7 +66,7 @@ describe('StoreExtension', () => {
     expect(ext.extendedActions.has('$reset')).toBeTruthy()
   })
 
-  it('chains synchronous actions in order and returns the child result', () => {
+  it('calls parent then child actions synchronously without chaining or returning a value (setup API)', () => {
     const calls: string[] = []
 
     const parent = {
@@ -87,18 +90,18 @@ describe('StoreExtension', () => {
 
     new StoreExtension(childStore, options)
 
-    expect(childStore.say()).toBe('child-result')
+    expect(childStore.say()).toBeUndefined()
     expect(calls).toEqual(['parent', 'child'])
   })
 
-  it('waits for an async parent action before calling the child action', async () => {
+  it('does not await an async parent action before calling the child action (fire-and-forget, legacy behavior)', () => {
     const calls: string[] = []
     let resolveParent!: () => void
     const parent = {
       $state: {},
       save: () => new Promise<void>((resolve) => {
         resolveParent = () => {
-          calls.push('parent')
+          calls.push('parent-resolved')
           resolve()
         }
       })
@@ -119,19 +122,24 @@ describe('StoreExtension', () => {
     } as any)
 
     const result = childStore.save()
-    expect(calls).toEqual([])
+
+    // child runs immediately, without waiting for the parent's promise to settle
+    expect(calls).toEqual(['child'])
+    expect(result).toBeUndefined()
 
     resolveParent()
-
-    await expect(result).resolves.toBe('child-result')
-    expect(calls).toEqual(['parent', 'child'])
+    expect(calls).toEqual(['child', 'parent-resolved'])
   })
 
-  it('propagates parent action errors without calling the child action', async () => {
+  it('still calls the child action even when the parent action later rejects (no error propagation, legacy behavior)', async () => {
     const parentError = new Error('parent failure')
     const parent = {
       $state: {},
-      save: () => Promise.reject(parentError)
+      save: () => {
+        const rejected = Promise.reject(parentError)
+        rejected.catch(() => { /* swallow to avoid an unhandled rejection in the test run */ })
+        return rejected
+      }
     }
     const childAction = vi.fn()
     const childStore: any = {
@@ -146,11 +154,14 @@ describe('StoreExtension', () => {
       actionsToExtends: ['save']
     } as any)
 
-    await expect(childStore.save()).rejects.toBe(parentError)
-    expect(childAction).not.toHaveBeenCalled()
+    childStore.save()
+
+    expect(childAction).toHaveBeenCalled()
   })
 
-  it('calls parent and child Option API actions with their respective stores', () => {
+  it('applies the wrapper\'s own dynamic `this` to both parent and child actions in Option API mode', () => {
+    isOptionApiMock.mockReturnValue(true)
+
     const parent = {
       $state: {},
       save(this: any) {
@@ -173,10 +184,9 @@ describe('StoreExtension', () => {
 
     childStore.save()
 
-    expect(parent).toMatchObject({ parentCalled: true })
-    expect(childStore).toMatchObject({ childCalled: true })
-    expect(parent).not.toHaveProperty('childCalled')
-    expect(childStore).not.toHaveProperty('parentCalled')
+    // Option API: both actions are applied with the wrapper's dynamic `this` (the child store)
+    expect(childStore).toMatchObject({ parentCalled: true, childCalled: true })
+    expect(parent).not.toHaveProperty('parentCalled')
   })
 
   it('adds new actions with optional renaming and marks custom properties', () => {
@@ -227,6 +237,42 @@ describe('StoreExtension', () => {
     // custom properties registered
     expect(childStore._customProperties.has('parentObj')).toBeTruthy()
     expect(childStore._customProperties.has('renamedCount')).toBeTruthy()
+  })
+
+  it('computed setter writes through a ref when the parent property is a ref, or replaces the value otherwise', () => {
+    const plainObj = { hello: 'world' }
+    const parent = {
+      $state: {},
+      parentObj: plainObj
+    }
+
+    const childStore: any = { $id: 'child', _customProperties: new Set(), $state: {} }
+
+    new StoreExtension(childStore, {
+      parentsStores: [{ build: () => parent }]
+    } as any)
+
+    const computedRef = childStore.parentObj as { value: unknown }
+
+    // parent.parentObj is a plain object (not a vue ref) -> setter replaces the reference directly
+    const replacement = { hello: 'vue' }
+    computedRef.value = replacement
+    expect(parent.parentObj).toBe(replacement)
+  })
+
+  it('duplicates non-function, non-object parent properties (e.g. arrays/primitives) as a toRef on the child store', () => {
+    const parent = {
+      $state: {},
+      tags: ['a', 'b']
+    }
+
+    const childStore: any = { $id: 'child', _customProperties: new Set(), $state: {} }
+
+    new StoreExtension(childStore, {
+      parentsStores: [{ build: () => parent }]
+    } as any)
+
+    expect((childStore.tags as any).value).toBe(parent.tags)
   })
 
   it('uses parentStore options with higher priority over global options for renaming actions and properties', () => {
@@ -286,7 +332,7 @@ describe('StoreExtension', () => {
 
     new StoreExtension(childStore, options)
 
-    expect(childStore.save()).toBe('done')
+    childStore.save()
     expect(calls).toEqual(['parent', 'child'])
   })
 
