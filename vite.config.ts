@@ -17,18 +17,17 @@ export default defineConfig({
     rollupOptions: {
       external: [
         'pinia',
-        'pinia-plugin-subscription',
+        /^pinia-plugin-subscription(\/.*)?$/,
         'vue'
       ],
-      treeshake: {
-        moduleSideEffects: false,
-        propertyReadSideEffects: false,
-      },
       output: {
-        globals: {
-          pinia: 'Pinia',
-          'pinia-plugin-subscription': 'PiniaPluginSubscription',
-          vue: 'Vue'
+        globals: (id) => {
+          if (id === 'pinia') return 'Pinia'
+          if (id === 'vue') return 'Vue'
+          if (id === 'pinia-plugin-subscription') return 'PiniaPluginSubscription'
+          if (id === 'pinia-plugin-subscription/helpers') return 'PiniaPluginSubscriptionHelpers'
+          if (id === 'pinia-plugin-subscription/types') return 'PiniaPluginSubscriptionTypes'
+          return id
         },
       },
     },

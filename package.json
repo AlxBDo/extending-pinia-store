@@ -1,7 +1,7 @@
 {
   "name": "pinia-plugin-extending-store",
   "description": "A Pinia plugin to create reusable stores that can extend other Pinia stores.",
-  "version": "0.1.3-beta.0",
+  "version": "0.1.3-beta.1",
   "type": "module",
   "author": "Alexandre Bidaud <alexbidaud85@gmail.com> (https://github.com/AlxBDo)",
   "license": "MIT",
