@@ -7,7 +7,7 @@ Plugin that extends Pinia stores (built on top of `pinia-plugin-subscription`) t
 - Support both Options API and Setup API style stores created with `defineAStore` (from `pinia-plugin-subscription`).
 
 ## Features
-- Compose parent stores into a child store via `parentsStores` (uses `ParentStore` helper).
+- Compose parent stores into a child store via `parentsStores`.
 - Extend or chain actions from parent stores into the child (`actionsToExtends`).
 - Rename actions and properties using `actionsToRename` / `propertiesToRename`.
 - Works with `pinia-plugin-subscription` and its `defineAStore` helper.
@@ -45,21 +45,21 @@ app.mount('#app')
 ## How it works (high level)
 - The project provides `ExtendsPiniaStore` (a `PluginSubscriber`) which will be invoked by `pinia-plugin-subscription` when a store is created.
 - The core logic is in `src/core/StoreExtension.ts` which duplicates state, computed properties and actions from parent stores into the child store.
-- Parent stores are described with the helper `ParentStore` (see `src/plugins/parentStore.ts`) which builds parent store IDs dynamically using the child's id.
+- Parent stores are described by an object (`{ myStoreId: useMyStore, ... }`) or with the helper `createParentStore` which builds parent store IDs dynamically using the child's id.
 
 ### Store options (API)
 
 The plugin uses an extended store options shape defined in `src/types/store.ts`.
 
 #### Store-level options (`ExtendedStoreOptions`)
-- `parentsStores: ParentStoreInterface[]` — array of `ParentStore` instances describing parent stores to include.
+- `parentsStores: ParentStoreInterface[] | { [key: string]: store }` — array of `ParentStore` instances (use `createParentStore` helper function) or object where the name of each property defines the Store's ID, and their value is the Store's constructor function (`{ myStoreId: useMyStore, ... }`).
 - `actionsToExtends?: string[]` — default list of parent actions that should be chained/merged into the child.
 - `actionsToRename?: Record<string, string>` — *(Deprecated: use `ParentStoreOptions` instead)* rename parent actions when adding them to the child.
 - `propertiesToRename?: Record<string, string>` — *(Deprecated: use `ParentStoreOptions` instead)* rename parent state properties when adding them to the child.
 
 #### Per-parent options (`ParentStoreOptions`)
-You can pass options directly to each `ParentStore` as a 3rd constructor parameter:
-`new ParentStore(id, storeConstructor, parentStoreOptions)`:
+You can pass options directly to each parent store as a 3rd `createParentStore` function parameter:
+`createParentStore(id, storeConstructor, parentStoreOptions)`:
 
 - `actionsToRename?: Record<string, string>` — rename parent actions specifically for this parent store. Takes priority over store-level `actionsToRename`.
 - `propertiesToRename?: Record<string, string>` — rename parent state properties specifically for this parent store. Takes priority over store-level `propertiesToRename`.
@@ -78,7 +78,7 @@ If an action or state property from a parent store already exists on the child s
 #### Option API example (from `src/stores/experiments/optionApi.ts`)
 
 ```ts
-import ParentStore from "../../plugins/parentStore"
+//import { createParentStore } from "pinia-plugin-extending-store"
 import { defineAStore } from "pinia-plugin-subscription"
 import { useItemStore, type IItemStore, type IItemStoreState } from "./item"
 
@@ -104,7 +104,7 @@ export const useOptionApiStore = defineAStore<OptionApiStore, OptionApiState>(
   },
   {
     // parent store is created from `useItemStore` and prefixed with 'optionApi' + childId
-    parentsStores: [ new ParentStore('optionApi', useItemStore) ]
+    parentsStores: { optionApi: useItemStore } // or  [ createParentStore('optionApi', useItemStore) ]
   }
 )
 ```
@@ -137,20 +137,19 @@ export const useUserStore = (id?: string) => defineAStoreCtx<UserStore, UserStat
     return { lists, password, setData, user }
   },
   {
-    actionsToExtends: ['setData'],
-    parentsStores: [ new ParentStore('userContact', useContactStore) ]
+    parentsStores: [ createParentStore('userContact', useContactStore, { actionsToExtends: ['setData'] }) ]
   }
 )()
 ```
 
 Notes:
+- `ParentStore('userContact', useContactStore, { actionsToExtends: ['setData'] })` will build an actual parent store id by concatenating `'userContact'` with the child id (so the child can extend a per-child parent).
 - `actionsToExtends: ['setData']` tells the extension logic to merge or chain the `setData` action from parents into the child.
-- `ParentStore('userContact', useContactStore)` will build an actual parent store id by concatenating `'userContact'` with the child id (so the child can extend a per-child parent).
 
 #### Multiple parent stores example (composing multiple stores without collisions)
 
 ```ts
-import ParentStore from 'pinia-plugin-extending-store'
+import createParentStore from 'pinia-plugin-extending-store'
 import { defineAStore, useCollectionStore } from 'pinia-plugin-extending-store'
 
 export const useListsStore = (id?: string) => defineAStore(
@@ -158,7 +157,7 @@ export const useListsStore = (id?: string) => defineAStore(
   () => ({}),
   {
     parentsStores: [
-      new ParentStore(
+      createParentStore(
         (id ?? 'lists') + 'listsCollection',
         useCollectionStore,
         {
@@ -166,7 +165,7 @@ export const useListsStore = (id?: string) => defineAStore(
           propertiesToRename: { items: 'lists' }
         }
       ),
-      new ParentStore(
+      createParentStore(
         (id ?? 'lists') + 'UserCollection',
         useCollectionStore,
         {
