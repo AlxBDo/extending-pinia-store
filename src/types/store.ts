@@ -1,7 +1,7 @@
 import type { StateTree } from "pinia";
 import type { Ref } from "vue";
 import type { CustomStore } from "pinia-plugin-subscription";
-import type { ParentStoreInterface } from "./plugin";
+import type { ParentStore, ParentStoreInterface } from "./plugin";
 
 
 export interface ExtendedStoreActions {
@@ -12,7 +12,7 @@ export interface ExtendedStoreOptions {
     actionsToExtends?: string[]
     actionsToRename?: Record<string, string>
     childId?: string
-    parentsStores?: ParentStoreInterface[]
+    parentsStores?: ParentStoreInterface[] | { [key: string]: ParentStore }
     propertiesToRename?: Record<string, string>
 }
 

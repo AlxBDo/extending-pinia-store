@@ -1,11 +1,13 @@
 import { computed, isRef, toRef } from "vue";
+import { isEmpty } from 'pinia-plugin-subscription'
 import { Store } from "pinia-plugin-subscription/helpers";
+import ParentStore from "../plugins/parentStore"
+import { PluginConsole } from "../utils/pluginConsole";
 import type { StateTree, Store as PiniaStore } from "pinia";
 import type { CustomStore, StoreOptions } from "pinia-plugin-subscription/types";
 import type { CustomConsole } from "pinia-plugin-subscription";
-import type { ParentStoreInterface, PluginStoreOptions } from "../types/plugin";
+import type { ParentStore as ParentStoreType, ParentStoreInterface, PluginStoreOptions } from "../types/plugin";
 import type { ExtendedStoreOptions, ParentStoreOptions } from "../types/store";
-import { PluginConsole } from "../utils/pluginConsole";
 
 
 const extendedActionsDefault = ['removePersistedState', 'watch', '$reset']
@@ -75,17 +77,28 @@ export default class StoreExtension extends Store {
         }
     }
 
+    private buildAndAddParentStore(store: ParentStoreInterface): void {
+        const parentStore = store.build(this.extensionOptions.childId ?? '') as CustomStore<Record<string, never>, StateTree>
+        this._parentsStores.push(parentStore)
+        if (store?.options && !this._parentsStoresOptionsMap.has(parentStore.$id)) {
+            this._parentsStoresOptionsMap.set(parentStore.$id, store.options)
+        }
+    }
+
     private buildParentStores(): void {
-        if (!this.extensionOptions.parentsStores?.length) {
+        if (typeof this.extensionOptions.parentsStores !== 'object') {
             return
         }
 
-        this.extensionOptions.parentsStores.forEach((store: ParentStoreInterface) => {
-            const parentStore = store.build(this.extensionOptions.childId ?? '') as CustomStore<Record<string, never>, StateTree>
-            this._parentsStores.push(parentStore)
-            if (store?.options && !this._parentsStoresOptionsMap.has(parentStore.$id)) {
-                this._parentsStoresOptionsMap.set(parentStore.$id, store.options)
-            }
+        if (!Array.isArray(this.extensionOptions.parentsStores)) {
+            Object.entries(this.extensionOptions.parentsStores).forEach(([key, store]) => {
+                this.buildAndAddParentStore(new ParentStore(key, store as ParentStoreType))
+            })
+            return
+        }
+
+        this.extensionOptions.parentsStores.forEach(store => {
+            this.buildAndAddParentStore(store)
         })
     }
 
@@ -241,7 +254,7 @@ Use the ParentStoreOptions : "actionsToExtends" option, to extend this action, o
     }
 
     protected static hasRequiredKeys(options: Record<string, unknown>): boolean {
-        return Array.isArray(options?.parentsStores) && options.parentsStores.length > 0
+        return !isEmpty(options?.parentsStores)
     }
 
     private initExtendedActions(): Set<string> {

@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { createParentStore } from '../utils/parentStoreFactory'
 
 const { getEnhancedStoreMock, isOptionApiMock } = vi.hoisted(() => ({
   getEnhancedStoreMock: vi.fn(),
@@ -44,6 +45,7 @@ vi.mock('pinia-plugin-subscription/helpers', () => ({
 vi.mock('pinia-plugin-action-flow', () => ({ ActionsFlows: class ActionsFlows { } }))
 
 import StoreExtension from '../core/StoreExtension'
+import { ParentStore } from '../types/plugin'
 
 describe('StoreExtension', () => {
   beforeEach(() => {
@@ -85,6 +87,70 @@ describe('StoreExtension', () => {
 
     const options: any = {
       parentsStores: [{ build: () => parent }],
+      actionsToExtends: ['say']
+    }
+
+    new StoreExtension(childStore, options)
+
+    expect(childStore.say()).toBeUndefined()
+    expect(calls).toEqual(['parent', 'child'])
+  })
+
+  it('declares parentsStores using object { key: store }', () => {
+    const calls: string[] = []
+
+    const parent = {
+      $state: { count: 1 },
+      say() {
+        calls.push('parent')
+        return 'parent-result'
+      }
+    }
+
+    function useParentStore() {
+      return parent
+    }
+
+    const childStore: any = { $id: 'child', _customProperties: new Set(), $state: {} }
+    childStore.say = () => {
+      calls.push('child')
+      return 'child-result'
+    }
+
+    const options: any = {
+      parentsStores: { parent: useParentStore },
+      actionsToExtends: ['say']
+    }
+
+    new StoreExtension(childStore, options)
+
+    expect(childStore.say()).toBeUndefined()
+    expect(calls).toEqual(['parent', 'child'])
+  })
+
+  it('declares parentsStores using createParentStore function', () => {
+    const calls: string[] = []
+
+    const parent = {
+      $state: { count: 1 },
+      say() {
+        calls.push('parent')
+        return 'parent-result'
+      }
+    }
+
+    function useParentStore() {
+      return parent
+    }
+
+    const childStore: any = { $id: 'child', _customProperties: new Set(), $state: {} }
+    childStore.say = () => {
+      calls.push('child')
+      return 'child-result'
+    }
+
+    const options: any = {
+      parentsStores: [createParentStore('parent', useParentStore as ParentStore)],
       actionsToExtends: ['say']
     }
 
@@ -337,7 +403,7 @@ describe('StoreExtension', () => {
   })
 
   it('logs an error when an action already exists in child and is not marked for extension', () => {
-    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => { })
     const parent = {
       $id: 'parentA',
       $state: {},
@@ -361,7 +427,7 @@ describe('StoreExtension', () => {
   })
 
   it('logs an error when a state property destination already exists in child store', () => {
-    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => { })
     const parent = {
       $id: 'parentA',
       $state: { sharedProp: 'parentVal' }

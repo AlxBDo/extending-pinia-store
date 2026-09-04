@@ -4,7 +4,9 @@ import type { CollectionState, CollectionStoreMethods } from "../types/collectio
 import type { Comparison } from "../types/comparison";
 import type { IError } from "../types/error";
 import type { ParentStoreInterface, ParentStore as ParentStoreType, ParentStoreResult } from "../types/plugin";
+import type { ParentStoreOptions } from "../types/store";
 import type { ResourceId } from "../types/resourceId";
+
 
 export type {
     ExtendedStore,
@@ -90,6 +92,15 @@ export declare const useWebUserStore: (id?: string) => import("pinia").Store<str
 /**
  * Utils
  */
+/**
+ * Creates a new instance of the ParentStore class, wrapping the provided store instance.
+ * @param id The unique identifier for the parent store.
+ * @param store The store instance to be wrapped by the parent store.
+ * @param storeOptions Optional configuration options for the parent store.
+ * @returns A new instance of the ParentStore class.
+ * @see ParentStore
+ */
+export declare function createParentStore<TStore extends object = Record<string, never>, TState extends StateTree = StateTree>(id: string, store: ParentStoreType<TStore, TState>, storeOptions?: ParentStoreOptions): ParentStore<TStore, TState>;
 export declare const PLUGIN_NAME: string;
 export declare function arrayObjectFindAllBy<T extends object>(arrayOfObject: T[], findBy: Partial<T>, comparison?: Comparison): T[];
 export declare function arrayObjectFindBy<T extends object>(arrayOfObject: T[], findBy: Partial<T>): T | undefined;
