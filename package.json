@@ -1,7 +1,7 @@
 {
   "name": "pinia-plugin-extending-store",
   "description": "A Pinia plugin to create reusable stores that can extend other Pinia stores.",
-  "version": "0.1.4",
+  "version": "0.1.5.beta.0",
   "type": "module",
   "author": "Alexandre Bidaud <alexbidaud85@gmail.com> (https://github.com/AlxBDo)",
   "license": "MIT",
@@ -16,11 +16,10 @@
   "exports": {
     ".": {
       "types": "./dist/types/index.d.ts",
-      "import": "./dist/pinia-plugin-extending-store.js",
-      "require": "./dist/pinia-plugin-extending-store.umd.cjs"
+      "import": "./dist/pinia-plugin-extending-store.js"
     }
   },
-  "main": "./dist/pinia-plugin-extending-store.umd.cjs",
+  "main": "./dist/pinia-plugin-extending-store.js",
   "types": "./dist/types/index.d.ts",
   "files": [
     "dist",
@@ -43,7 +42,7 @@
     "coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "pinia-plugin-subscription": "^0.1.7-beta.1"
+    "pinia-plugin-subscription": "^0.2.0-beta.0"
   },
   "peerDependencies": {
     "pinia": "^3.0.2",
