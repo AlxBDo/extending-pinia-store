@@ -1,4 +1,4 @@
-import type { StateTree } from "pinia";
+import type { StateTree, Store } from "pinia";
 import type { Ref } from "vue";
 import type { CustomStore } from "pinia-plugin-subscription";
 import type { ParentStore, ParentStoreInterface } from "./plugin";
@@ -27,3 +27,12 @@ export type ExtendedStore<
 > = CustomStore<TStore, TState> & ExtendedStoreOptions & ExtendedStoreActions
 
 export type ParentStoreOptions = Omit<ExtendedStoreOptions, 'childId' | 'parentsStores'>
+
+/**
+ * Store instance whose state and actions include those inherited from its parent stores.
+ */
+export type ExtendedStoreInstance<
+    TState extends StateTree,
+    TActions extends object,
+    TGetters extends object = {}
+> = Store<string, TState> & TGetters & TActions & ExtendedStoreActions

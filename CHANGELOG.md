@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.1.5] - 2026-09-25
+
+### Added
+- Explicit instance types for each published store, so IDEs expose their state, getters and actions (including those inherited from parent stores): `CollectionStoreInstance`, `ContactInformationStoreInstance`, `ErrorsStoreInstance<TError>`, `IdentityStoreInstance`, `ResourceIdStoreInstance`, `WebUserStoreInstance`.
+- `ExtendedStoreInstance<TState, TActions, TGetters>` generic type describing a store extended by the plugin (includes `resetParentStores()`).
+- New exported types: `ContactInformation`, `ContactInformationValue`, `ContactInformationStoreState`, `IdentityGetters`, `IError`.
+
+### Changed
+- Upgraded `pinia-plugin-subscription` dependency to `^0.2.0`.
+- The package is now published as ESM only: the `require` export and the UMD `main` entry were removed.
+
+### Fixed
+- Published store declarations in `dist/types/index.d.ts` no longer resolve to generic Pinia types (`Store<string, StateTree, _GettersTree<StateTree>, _ActionsTree>`) or verbose `Pick<...>` types: `useCollectionStore`, `useContactInformationStore`, `useErrorsStore`, `useIdentityStore`, `useResourceIdStore` and `useWebUserStore` now return their dedicated instance type.
+- `ErrorsStore` no longer declares `addItem`/`updateItem` (renamed at runtime) and now declares `setError` and `updateError`.
+- `ContactInformationStore` now declares the inherited, renamed collection actions (`clear`, `getContactInformationItem`, `getContactInformations`, `setContactInformationItem`, `setContactInformations`), and `getContactInformationValue` may return `undefined`.
+
 ## [v0.1.4] - 2026-09-04
 
 ### Added

@@ -1,3 +1,4 @@
+import type { Store } from "pinia"
 import type { Comparison } from "./comparison"
 
 export interface CollectionState<T extends object = Record<string, unknown>> {
@@ -13,6 +14,9 @@ export interface CollectionStoreMethods<T extends object = Record<string, unknow
     setItems: (items: T[]) => void
     updateItem: (updatedItem: T, oldItem?: T) => void
 }
+
+export type CollectionStoreInstance<T extends object = Record<string, unknown>> =
+    Store<string, CollectionState<T>> & CollectionStoreMethods<T>
 
 export interface SearchCollectionCriteria {
     [key: number | string | symbol]: unknown;

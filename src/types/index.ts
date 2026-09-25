@@ -1,11 +1,14 @@
 import type { CustomConsole, PluginSubscriber, Store } from "pinia-plugin-subscription";
 import type { StateTree } from "pinia";
-import type { CollectionState, CollectionStoreMethods } from "../types/collection";
+import type { CollectionStoreInstance } from "../types/collection";
 import type { Comparison } from "../types/comparison";
-import type { IError } from "../types/error";
+import type { ContactInformationStoreInstance } from "../types/contactInformation";
+import type { ErrorsStoreInstance, IError } from "../types/error";
+import type { IdentityStoreInstance } from "../types/identity";
 import type { ParentStoreInterface, ParentStore as ParentStoreType, ParentStoreResult } from "../types/plugin";
 import type { ParentStoreOptions } from "../types/store";
-import type { ResourceId } from "../types/resourceId";
+import type { ResourceIdStoreInstance } from "../types/resourceId";
+import type { WebUserStoreInstance } from "../types/webuser";
 
 
 export type {
@@ -33,60 +36,28 @@ export declare const ExtendsPiniaStore: ExtendsPiniaStoreClass;
 /**
  * Stores
  */
-export declare const useCollectionStore: (id?: string) => import("pinia").Store<string, CollectionState<Record<string, unknown>>, {}, {
-    addItem(item: Record<string, unknown>): void;
-    clear(): void;
-    getItem(criteria: Partial<Record<string, unknown>>): Record<string, unknown> | undefined;
-    getItems(criteria?: Partial<Record<string, unknown>>, comparisonMode?: Comparison): Record<string, unknown>[];
-    removeItem(item: Record<string, unknown>): void;
-    setItems(items: Record<string, unknown>[]): void;
-    updateItem(updatedItem: Record<string, unknown>, oldItem?: Record<string, unknown>): void;
-}>;
-export declare const useContactInformationStore: (id: string) => import("pinia").Store<string, import("pinia").StateTree, import("pinia")._GettersTree<import("pinia").StateTree>, import("pinia")._ActionsTree>;
-type omitActions = 'clear' | 'getItem' | 'getItems' | 'removeItem' | 'setItems';
-export interface ErrorsStore<TError extends IError = IError> extends Omit<CollectionStoreMethods, omitActions> {
-    addError: (error: TError) => void;
-    clearErrors: () => void;
-    getError: (errorId: {
-        id: string;
-    }) => TError | undefined;
-    getErrors: (findBy?: Partial<TError>, comparisonMode?: Comparison) => TError[] | undefined;
-    getErrorById: (id: string) => TError | undefined;
-    getErrorsByLevel: (value: number, comparisonMode?: Comparison) => TError[] | undefined;
-    hasError: (level?: number) => boolean;
-    removeError: (criteria: Partial<TError>) => void;
-    setErrors: (errors: TError[]) => void;
-}
-export declare const useErrorsStore: <TError extends IError = IError>(id: string) => import("pinia").Store<string, import("pinia").StateTree, import("pinia")._GettersTree<import("pinia").StateTree>, import("pinia")._ActionsTree>;
-export declare const useIdentityStore: (id: string) => import("pinia").Store<string, Pick<{
-    birthname: import("vue").Ref<string | undefined, string | undefined>;
-    firstname: import("vue").Ref<string | undefined, string | undefined>;
-    fullname: import("vue").ComputedRef<string>;
-    gender: import("vue").Ref<string | undefined, string | undefined>;
-    getFullname: () => string;
-    lastname: import("vue").Ref<string | undefined, string | undefined>;
-    setData: (identity: IdentityState) => void;
-}, "birthname" | "firstname" | "gender" | "lastname">, Pick<{
-    birthname: import("vue").Ref<string | undefined, string | undefined>;
-    firstname: import("vue").Ref<string | undefined, string | undefined>;
-    fullname: import("vue").ComputedRef<string>;
-    gender: import("vue").Ref<string | undefined, string | undefined>;
-    getFullname: () => string;
-    lastname: import("vue").Ref<string | undefined, string | undefined>;
-    setData: (identity: IdentityState) => void;
-}, "fullname">, Pick<{
-    birthname: import("vue").Ref<string | undefined, string | undefined>;
-    firstname: import("vue").Ref<string | undefined, string | undefined>;
-    fullname: import("vue").ComputedRef<string>;
-    gender: import("vue").Ref<string | undefined, string | undefined>;
-    getFullname: () => string;
-    lastname: import("vue").Ref<string | undefined, string | undefined>;
-    setData: (identity: IdentityState) => void;
-}, "getFullname" | "setData">>;
-export declare const useResourceIdStore: (id: string) => import("pinia").Store<string, ResourceId, {}, {
-    setData(data: Partial<ResourceId>): void;
-}>;
-export declare const useWebUserStore: (id?: string) => import("pinia").Store<string, import("pinia").StateTree, import("pinia")._GettersTree<import("pinia").StateTree>, import("pinia")._ActionsTree>;
+export type { ExtendedStoreInstance } from "./store";
+export type { CollectionState, CollectionStoreInstance, CollectionStoreMethods, SearchCollectionCriteria } from "../types/collection";
+export type { Comparison };
+export type { ComparisonNumber, ComparisonString } from "./comparison";
+export declare const useCollectionStore: (id?: string) => CollectionStoreInstance;
+export type {
+    ContactInformation,
+    ContactInformationState,
+    ContactInformationStore,
+    ContactInformationStoreInstance,
+    ContactInformationStoreState,
+    ContactInformationValue
+} from "../types/contactInformation";
+export declare const useContactInformationStore: (id: string) => ContactInformationStoreInstance;
+export type { ErrorsState, ErrorsStore, ErrorsStoreInstance, IError } from "../types/error";
+export declare const useErrorsStore: <TError extends IError = IError>(id: string) => ErrorsStoreInstance<TError>;
+export type { IdentityGetters, IdentityState, IdentityStore, IdentityStoreInstance } from "../types/identity";
+export declare const useIdentityStore: (id: string) => IdentityStoreInstance;
+export type { ResourceId, ResourceIdStore, ResourceIdStoreInstance } from "../types/resourceId";
+export declare const useResourceIdStore: (id: string) => ResourceIdStoreInstance;
+export type { WebUserState, WebUserStore, WebUserStoreInstance } from "../types/webuser";
+export declare const useWebUserStore: (id?: string) => WebUserStoreInstance;
 
 
 /**
