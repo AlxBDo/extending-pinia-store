@@ -7,9 +7,18 @@ import type { SearchCollectionCriteria } from '../types/collection'
 import { computed } from "vue";
 
 
+interface ContactInformationStore extends Omit<CollectionStoreMethods<ContactInformation>, 'addItem' | 'getItem' | 'getItems' | 'removeItem' | 'setItems' | 'updateItem'> {
+    setContactInformationItem(item: ContactInformation): void
+    getContactInformationItem(criteria: SearchCollectionCriteria): ContactInformation | undefined
+    getContactInformations(criteria: SearchCollectionCriteria): ContactInformation[]
+    removeContactInformation(criteria: SearchCollectionCriteria): void
+    setContactInformations(items: ContactInformation[]): void
+    updateContactInformation(item: ContactInformation): void
+}
+
 export const useContactInformationStore = (
     id: string
-) => defineAStoreCtx<CollectionStoreMethods<ContactInformation>, CollectionState<ContactInformation>>(id, (ctx) => {
+) => defineAStoreCtx<ContactInformationStore, CollectionState<ContactInformation>>(id, (ctx) => {
     const email = computed({
         get: () => getContactInformationValue('email'),
         set: (value: string) => addEmail('email', value)
@@ -27,7 +36,7 @@ export const useContactInformationStore = (
 
 
     function addContactInformation(name: string, type: string, value: ContactInformationValue, id?: number): void {
-        getStore().addItem({ id: id ?? name, name, type, value })
+        getStore().setContactInformationItem({ id: id ?? name, name, type, value })
     }
 
     function addEmail(name: string, value: string, id?: number) {
@@ -44,8 +53,8 @@ export const useContactInformationStore = (
 
     function getContactInformation(criteria: SearchCollectionCriteria): ContactInformation | ContactInformation[] | undefined {
         return criteria.id
-            ? getStore().getItem(criteria)
-            : getStore().getItems(criteria)
+            ? getStore().getContactInformationItem(criteria)
+            : getStore().getContactInformations(criteria)
     }
 
     function getContactInformationValue(id: string): ContactInformationValue | undefined {
@@ -53,7 +62,7 @@ export const useContactInformationStore = (
     }
 
     function getStore() {
-        return getEnhancedStore<CollectionStoreMethods<ContactInformation> & CollectionState<ContactInformation>>(ctx)
+        return getEnhancedStore<ContactInformationStore & CollectionState<ContactInformation>>(ctx)
     }
 
 
@@ -69,5 +78,23 @@ export const useContactInformationStore = (
         phone
     }
 }, {
-    parentsStores: [new ParentStore(`${id}Collection`, useCollectionStore)]
+    parentsStores: [
+        new ParentStore(
+            `${id}ContactInformationCollectionStore`,
+            useCollectionStore,
+            {
+                actionsToRename: {
+                    addItem: 'setContactInformationItem',
+                    getItem: 'getContactInformationItem',
+                    getItems: 'getContactInformations',
+                    removeItem: 'removeContactInformation',
+                    setItems: 'setContactInformations',
+                    updateItem: 'updateContactInformation'
+                },
+                propertiesToRename: {
+                    items: 'contactInformations'
+                }
+            }
+        )
+    ]
 })()

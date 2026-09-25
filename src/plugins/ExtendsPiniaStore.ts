@@ -1,7 +1,7 @@
 import StoreExtension from "../core/StoreExtension";
 import { PluginSubscriber } from "pinia-plugin-subscription/helpers";
 import { PluginConsole } from "../utils/pluginConsole";
-import type { ExtendedStoreActions } from "../types/store";
+import type { ExtendedStoreActions, ExtendedStoreOptions } from "../types/store";
 import { pluginName } from "../utils/constantes";
 import type { Store } from "pinia";
 
@@ -24,3 +24,8 @@ class ExtendsPiniaStore extends PluginSubscriber<StoreExtension> {
 }
 
 export default new ExtendsPiniaStore();
+
+declare module 'pinia-plugin-subscription/types' {
+    interface StoreOptionsExtensions extends Omit<ExtendedStoreOptions, 'propertiesToRename' | 'actionsToRename'> {
+    }
+}

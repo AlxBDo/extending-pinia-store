@@ -2,28 +2,16 @@ import { defineAStoreCtx, getEnhancedStore, isEmpty } from "pinia-plugin-subscri
 import { useCollectionStore } from "./collection";
 import ParentStore from "../plugins/parentStore";
 
-import type { CollectionStoreMethods } from "../types/collection";
-import type { Comparison, ComparisonNumber } from "../types/comparison";
-import type { ErrorsState, IError } from "../types/error";
+import type { ComparisonNumber } from "../types/comparison";
+import type { ErrorsState, IError, ErrorsStore } from "../types/error";
 
-
-type omitActions = 'clear' | 'getItem' | 'getItems' | 'removeItem' | 'setItems'
-
-export interface ErrorsStore<TError extends IError = IError> extends Omit<CollectionStoreMethods<TError>, omitActions> {
-    addError: (error: TError) => void
-    clearErrors: () => void
-    getError: (errorId: { id: string }) => TError | undefined
-    getErrors: (findBy?: Partial<TError>, comparisonMode?: Comparison) => TError[] | undefined
-    getErrorById: (id: string) => TError | undefined
-    getErrorsByLevel: (value: number, comparisonMode?: Comparison) => TError[] | undefined
-    hasError: (level?: number) => boolean
-    removeError: (criteria: Partial<TError>) => void
-    setErrors: (errors: TError[]) => void
+interface ErrorStoreCtx<TError extends IError = IError> {
+    setError(error: TError): void
 }
 
 
 export const useErrorsStore = <TError extends IError = IError>(id: string) =>
-    defineAStoreCtx<ErrorsStore<TError>, ErrorsState<TError>>(
+    defineAStoreCtx<ErrorsStore<TError> & ErrorStoreCtx<TError>, ErrorsState<TError>>(
         id,
         (ctx) => {
             function addError(error: TError): void {
@@ -35,7 +23,7 @@ export const useErrorsStore = <TError extends IError = IError>(id: string) =>
                     error.level = 1
                 }
 
-                !getErrorById(error.id) && getStore()?.addItem(error)
+                !getErrorById(error.id) && getStore()?.setError(error)
             }
 
             function getErrorById(errorId: string): TError | undefined {
@@ -49,7 +37,7 @@ export const useErrorsStore = <TError extends IError = IError>(id: string) =>
             }
 
             function getStore() {
-                return getEnhancedStore<ErrorsStore<TError> & ErrorsState<TError>>(ctx)
+                return getEnhancedStore<ErrorsStore<TError> & ErrorStoreCtx<TError> & ErrorsState<TError>>(ctx)
             }
 
             function hasError(level: number = 0): boolean {
@@ -65,11 +53,19 @@ export const useErrorsStore = <TError extends IError = IError>(id: string) =>
             }
         },
         {
-            actionsToRename: {
-                clear: 'clearErrors', getItem: 'getError', getItems: 'getErrors',
-                removeItem: 'removeError', setItems: 'setErrors'
-            },
-            parentsStores: [new ParentStore('errorCollection', useCollectionStore)],
-            propertiesToRename: { items: 'errors' }
+            parentsStores: [
+                new ParentStore(`${id}ErrorCollectionStore`, useCollectionStore, {
+                    actionsToRename: {
+                        addItem: 'setError',
+                        clear: 'clearErrors',
+                        getItem: 'getError',
+                        getItems: 'getErrors',
+                        removeItem: 'removeError',
+                        setItems: 'setErrors',
+                        updateItem: 'updateError'
+                    },
+                    propertiesToRename: { items: 'errors' }
+                })
+            ]
         }
     )()
