@@ -38,7 +38,7 @@ vi.mock('pinia-plugin-subscription/helpers', () => ({
     stateHas(key: string) { return key in this.state }
     isOptionApi() { return isOptionApiMock() }
     getValue(value: any) { return value && value.value !== undefined ? value.value : value }
-    debugLog() { /* no-op */ }
+    trace(namespace: string, payload?: any) { /* no-op */ }
   }
 }))
 
