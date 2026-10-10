@@ -75,7 +75,3 @@ export declare function createParentStore<TStore extends object = Record<string,
 export declare const PLUGIN_NAME: string;
 export declare function arrayObjectFindAllBy<T extends object>(arrayOfObject: T[], findBy: Partial<T>, comparison?: Comparison): T[];
 export declare function arrayObjectFindBy<T extends object>(arrayOfObject: T[], findBy: Partial<T>): T | undefined;
-declare class PluginConsoleClass extends CustomConsole {
-    protected _pluginName: string;
-}
-export declare const PluginConsole: PluginConsoleClass;

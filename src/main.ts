@@ -3,18 +3,29 @@ import { createPinia } from 'pinia'
 import './style.css'
 import App from './App.vue'
 import { createPlugin, PLUGIN_NAME as PPS } from 'pinia-plugin-subscription'
+import { createTracerRegistry, createConsoleTraceListener } from 'pinia-plugin-subscription/helpers'
 import ExtendsPiniaStore from './plugins/ExtendsPiniaStore'
 import { pluginName } from './utils/constantes'
 
 const app = createApp(App)
 const pinia = createPinia()
 
+const tracerRegistry = createTracerRegistry()
+
 pinia.use(
     createPlugin(
         [ExtendsPiniaStore],
-        //[PPS, pluginName, 'PluginSubscription']
+        { createTracer: tracerRegistry.createTracer }
     )
 )
+
+tracerRegistry.addTraceListener({
+    ...createConsoleTraceListener(),
+    filter: event => {
+        console.log(event)
+        return event.source === 'storeextension:extendsstore'
+    }
+})
 
 app.use(pinia)
 app.mount('#app')
