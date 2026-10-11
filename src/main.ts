@@ -22,8 +22,8 @@ pinia.use(
 tracerRegistry.addTraceListener({
     ...createConsoleTraceListener(),
     filter: event => {
-        console.log(event)
-        return event.source === 'storeextension:extendsstore'
+        //console.log(event)
+        return event.scope === 'lists'
     }
 })
 
