@@ -1,12 +1,10 @@
 import { computed, isRef, toRef } from "vue";
-import { isEmpty } from 'pinia-plugin-subscription'
-import { Store } from "pinia-plugin-subscription/helpers";
+import { isEmpty, Store } from "pinia-plugin-subscription/helpers";
 import ParentStore from "../plugins/parentStore"
-import { PluginConsole } from "../utils/pluginConsole";
+import { pluginName } from "../utils/constantes";
 import type { StateTree, Store as PiniaStore } from "pinia";
-import type { CustomStore, StoreOptions } from "pinia-plugin-subscription/types";
-import type { CustomConsole } from "pinia-plugin-subscription";
-import type { ParentStore as ParentStoreType, ParentStoreInterface, PluginStoreOptions } from "../types/plugin";
+import type { CustomStore, PluginStoreOptions, StoreOptionsExtensions } from "pinia-plugin-subscription/types";
+import type { ParentStore as ParentStoreType, ParentStoreInterface } from "../types/plugin";
 import type { ExtendedStoreOptions, ParentStoreOptions } from "../types/store";
 
 
@@ -58,11 +56,9 @@ export default class StoreExtension extends Store {
 
     constructor(
         store: PiniaStore,
-        options: PluginStoreOptions & StoreOptions,
-        debug: boolean = false,
-        customConsole?: CustomConsole
+        options: PluginStoreOptions & StoreOptionsExtensions
     ) {
-        super(store, options, debug, customConsole)
+        super(store, options)
 
         this._extendedActions = this.initExtendedActions()
         this.extendsStore()
@@ -136,8 +132,8 @@ export default class StoreExtension extends Store {
                 ) {
                     this.extendsAction(storeToExtend, key)
                 } else {
-                    PluginConsole.error(
-                        `Action "${key}" of "${storeToExtend.$id ?? 'unknown store'}" is not extended cause its all ready exists in the extended store.`,
+                    console.warn(`[${pluginName}]
+Action "${key}" of "${storeToExtend.$id ?? 'unknown store'}" is not extended cause its all ready exists in the extended store.`,
                         `
 Use the ParentStoreOptions : "actionsToExtends" option, to extend this action, or "actionsToRename" option to rename it.`
                     )
@@ -185,8 +181,8 @@ Use the ParentStoreOptions : "actionsToExtends" option, to extend this action, o
 
             const childStoreKey = this.getPropertyNameForChildState(key, parentStoreOptions)
             if (this.stateHas(childStoreKey)) {
-                PluginConsole.error(
-                    `State property "${childStoreKey}" of "${storeToExtend.$id ?? 'unknown store'}" is not extended cause its all ready exists in the extended store.`,
+                console.warn(`[${pluginName}]
+State property "${childStoreKey}" of "${storeToExtend.$id ?? 'unknown store'}" is not extended cause its all ready exists in the extended store.`,
                     `\nUse the ParentStoreOptions: "propertiesToRename" option to rename it.`
                 )
                 return
@@ -202,12 +198,12 @@ Use the ParentStoreOptions : "actionsToExtends" option, to extend this action, o
      * Extends to store stores list in parentsStores property
      */
     private extendsStore(): void {
-        this.debugLog(`extendsStore() - ${this.extendedStore.$id}`, [
-            'parentsStores:',
-            this.parentsStores,
-            'options:',
-            this.extensionOptions
-        ])
+        this.trace(`StoreExtention:extendsStore:${this.extendedStore.$id}`, {
+            scope: this.extendedStore.$id,
+            source: 'storeextension:extendsstore',
+            parentsStores: this.parentsStores,
+            extensionOptions: this.extensionOptions,
+        })
 
         const storeToExtend = this.parentsStores
 
@@ -264,9 +260,14 @@ Use the ParentStoreOptions : "actionsToExtends" option, to extend this action, o
     private resetParentStores(): void {
         const parentStores = this.parentsStores
         if (Array.isArray(parentStores) && parentStores.length) {
-            parentStores.forEach(store => store?.$reset?.())
+            parentStores.forEach(store => {
+                store?.$reset?.()
+                this.trace(`StoreExtention:resetParentStore:${store.$id}`, {
+                    scope: this.extendedStore.$id,
+                    source: 'storeextension:resetparentstore',
+                    parentStoreState: store.$state
+                })
+            })
         }
-
-        this.debugLog('resetParentsStores', { parentStores })
     }
 }
