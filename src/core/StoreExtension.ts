@@ -198,12 +198,7 @@ State property "${childStoreKey}" of "${storeToExtend.$id ?? 'unknown store'}" i
      * Extends to store stores list in parentsStores property
      */
     private extendsStore(): void {
-        this.trace(`StoreExtention:extendsStore:${this.extendedStore.$id}`, {
-            scope: this.extendedStore.$id,
-            source: 'storeextension:extendsstore',
-            parentsStores: this.parentsStores,
-            extensionOptions: this.extensionOptions,
-        })
+        this.trace('extendsStore', this.extendedStore.$id)
 
         const storeToExtend = this.parentsStores
 
@@ -262,11 +257,7 @@ State property "${childStoreKey}" of "${storeToExtend.$id ?? 'unknown store'}" i
         if (Array.isArray(parentStores) && parentStores.length) {
             parentStores.forEach(store => {
                 store?.$reset?.()
-                this.trace(`StoreExtention:resetParentStore:${store.$id}`, {
-                    scope: this.extendedStore.$id,
-                    source: 'storeextension:resetparentstore',
-                    parentStoreState: store.$state
-                })
+                this.trace('resetParentStore', this.extendedStore.$id)
             })
         }
     }
