@@ -1,7 +1,7 @@
 import { computed, isRef, toRef } from "vue";
 import { isEmpty, Store } from "pinia-plugin-subscription/helpers";
 import ParentStore from "../plugins/parentStore"
-import { pluginName } from "../utils/constantes";
+import { pluginName } from "../utils/constants";
 import type { StateTree, Store as PiniaStore } from "pinia";
 import type { CustomStore, PluginStoreOptions, StoreOptionsExtensions } from "pinia-plugin-subscription/types";
 import type { ParentStore as ParentStoreType, ParentStoreInterface } from "../types/plugin";
@@ -198,7 +198,7 @@ State property "${childStoreKey}" of "${storeToExtend.$id ?? 'unknown store'}" i
      * Extends to store stores list in parentsStores property
      */
     private extendsStore(): void {
-        this.trace('extendsStore', this.extendedStore.$id)
+        this.trace('extends:parentsStores', this.extendedStore.$id)
 
         const storeToExtend = this.parentsStores
 
@@ -257,7 +257,9 @@ State property "${childStoreKey}" of "${storeToExtend.$id ?? 'unknown store'}" i
         if (Array.isArray(parentStores) && parentStores.length) {
             parentStores.forEach(store => {
                 store?.$reset?.()
-                this.trace('resetParentStore', this.extendedStore.$id)
+                this.trace(`reset:parentStore:${store.$id}`, this.extendedStore.$id, () => ({
+                    $state: store.$state
+                }))
             })
         }
     }
