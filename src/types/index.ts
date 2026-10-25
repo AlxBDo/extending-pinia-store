@@ -1,4 +1,4 @@
-import type { PluginSubscriber, Store } from "pinia-plugin-subscription";
+import type { PluginSubscriber, Store } from "pinia-plugin-subscription/helpers";
 import type { StateTree } from "pinia";
 import type { CollectionStoreInstance } from "../types/collection";
 import type { Comparison } from "../types/comparison";

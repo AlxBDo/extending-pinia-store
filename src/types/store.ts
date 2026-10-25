@@ -1,6 +1,6 @@
 import type { StateTree, Store } from "pinia";
 import type { Ref } from "vue";
-import type { CustomStore } from "pinia-plugin-subscription";
+import type { CustomStore } from "pinia-plugin-subscription/types";
 import type { ParentStore, ParentStoreInterface } from "./plugin";
 
 

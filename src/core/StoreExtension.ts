@@ -1,5 +1,5 @@
 import { computed, isRef, toRef } from "vue";
-import { isEmpty, Store } from "pinia-plugin-subscription/helpers";
+import { isEmpty, Store, traceGroups } from "pinia-plugin-subscription/helpers";
 import ParentStore from "../plugins/parentStore"
 import { pluginName } from "../utils/constants";
 import type { StateTree, Store as PiniaStore } from "pinia";
@@ -258,7 +258,8 @@ State property "${childStoreKey}" of "${storeToExtend.$id ?? 'unknown store'}" i
             parentStores.forEach(store => {
                 store?.$reset?.()
                 this.trace(`reset:parentStore:${store.$id}`, this.extendedStore.$id, () => ({
-                    $state: store.$state
+                    $state: store.$state,
+                    groupId: traceGroups.reset(this.extendedStore.$id)
                 }))
             })
         }
