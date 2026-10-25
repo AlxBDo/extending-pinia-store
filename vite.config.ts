@@ -1,34 +1,53 @@
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vite'
-import vue from '@vitejs/plugin-vue'
 import { pluginName } from './src/utils/constants'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
 export default defineConfig({
-  plugins: [vue()],
   build: {
+    target: 'es2020',
+    minify: 'esbuild',
+    reportCompressedSize: false,
+    sourcemap: true,
     lib: {
-      entry: resolve(__dirname, 'src/lib/main.ts'),
+      entry: {
+        index: resolve(__dirname, 'src/lib/main.ts'),
+        stores: resolve(__dirname, 'src/lib/stores.ts'),
+      },
       name: pluginName,
-      fileName: pluginName,
+      formats: ['es'],
     },
     rollupOptions: {
-      external: [
-        'pinia',
-        /^pinia-plugin-subscription(\/.*)?$/,
-        'vue'
+      external: ['pinia', 'vue'],
+      treeshake: {
+        moduleSideEffects: false,
+        propertyReadSideEffects: false,
+      },
+      plugins: [
+        {
+          name: 'strip-jsdoc-from-bundle',
+          // esbuild preserves JSDoc containing '@' annotations (@param, @returns...)
+          // even when minifying. They add ~3 KB to the published bundle while the
+          // documentation remains available to consumers in the generated .d.ts files.
+          renderChunk(code) {
+            return { code: code.replace(/\/\*\*[\s\S]*?\*\//g, ''), map: null }
+          },
+        },
       ],
       output: {
-        globals: (id) => {
-          if (id === 'pinia') return 'Pinia'
-          if (id === 'vue') return 'Vue'
-          if (id === 'pinia-plugin-subscription') return 'PiniaPluginSubscription'
-          if (id === 'pinia-plugin-subscription/helpers') return 'PiniaPluginSubscriptionHelpers'
-          if (id === 'pinia-plugin-subscription/types') return 'PiniaPluginSubscriptionTypes'
-          return id
+        exports: 'named',
+        entryFileNames: (chunkInfo) => {
+          const entryName = chunkInfo.name
+          if (entryName === 'index') {
+            return `${pluginName}.js`
+          }
+
+          return `${entryName}.js`
         },
+        chunkFileNames: 'chunks/[name]-[hash].js',
+        generatedCode: 'es2015',
       },
     },
   },

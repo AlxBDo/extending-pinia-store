@@ -28,6 +28,7 @@ export interface ContactInformationStore {
     removeContactInformation(criteria: SearchCollectionCriteria): void
     setContactInformationItem(item: ContactInformation): void
     setContactInformations(items: ContactInformation[]): void
+    setData(data: ContactInformationState): void
     updateContactInformation(item: Partial<ContactInformation>, oldItem?: ContactInformation): void
 }
 

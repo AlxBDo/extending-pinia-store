@@ -1,20 +1,11 @@
 import { defineAStoreCtx, getEnhancedStore } from "pinia-plugin-subscription";
 import { useCollectionStore } from './collection'
 import ParentStore from '../plugins/parentStore'
-import type { CollectionState, CollectionStoreMethods } from '../types/collection'
-import type { ContactInformation, ContactInformationValue } from '../types/contactInformation'
+import type { CollectionState } from '../types/collection'
+import type { ContactInformation, ContactInformationState, ContactInformationStore, ContactInformationValue } from '../types/contactInformation'
 import type { SearchCollectionCriteria } from '../types/collection'
 import { computed } from "vue";
 
-
-interface ContactInformationStore extends Omit<CollectionStoreMethods<ContactInformation>, 'addItem' | 'getItem' | 'getItems' | 'removeItem' | 'setItems' | 'updateItem'> {
-    setContactInformationItem(item: ContactInformation): void
-    getContactInformationItem(criteria: SearchCollectionCriteria): ContactInformation | undefined
-    getContactInformations(criteria: SearchCollectionCriteria): ContactInformation[]
-    removeContactInformation(criteria: SearchCollectionCriteria): void
-    setContactInformations(items: ContactInformation[]): void
-    updateContactInformation(item: ContactInformation): void
-}
 
 export const useContactInformationStore = (
     id: string
@@ -65,6 +56,18 @@ export const useContactInformationStore = (
         return getEnhancedStore<ContactInformationStore & CollectionState<ContactInformation>>(ctx)
     }
 
+    function setData(data: ContactInformationState) {
+        if (data.email) {
+            addEmail('email', data.email)
+        }
+        if (data.mobilePhone) {
+            addMobilePhone('mobile-phone', data.mobilePhone)
+        }
+        if (data.phone) {
+            addPhone('phone', data.phone)
+        }
+    }
+
 
     return {
         addContactInformation,
@@ -75,7 +78,8 @@ export const useContactInformationStore = (
         getContactInformation,
         getContactInformationValue,
         mobilePhone,
-        phone
+        phone,
+        setData
     }
 }, {
     parentsStores: [

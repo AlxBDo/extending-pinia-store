@@ -29,6 +29,10 @@ tracerRegistry.addListener(
         {
             target: 'scope',
             value: 'lists'
+        },
+        {
+            target: 'scope',
+            value: 'newContactStore'
         }
     ],
     { filterMode: 'some' }

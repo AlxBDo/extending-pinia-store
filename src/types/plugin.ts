@@ -1,7 +1,7 @@
 import ParentStoreClass from "../plugins/parentStore"
 
 import type { StateTree, Store } from "pinia"
-import type { CustomStore } from "pinia-plugin-subscription"
+import type { CustomStore } from "pinia-plugin-subscription/types"
 import type { ExtendedStoreOptions, ParentStoreOptions } from "./store"
 
 export type ParentStoreResult<TStore extends object, TState extends StateTree> =
