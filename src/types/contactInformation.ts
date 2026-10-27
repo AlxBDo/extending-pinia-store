@@ -16,6 +16,9 @@ export interface ContactInformationState {
 }
 
 export interface ContactInformationStore {
+    email: ContactInformationValue | undefined
+    mobilePhone: ContactInformationValue | undefined
+    phone: ContactInformationValue | undefined
     addContactInformation(name: string, type: string, value: ContactInformationValue): void
     addEmail(name: string, value: string): void
     addMobilePhone(name: string, value: string): void
