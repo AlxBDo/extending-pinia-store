@@ -1,14 +1,8 @@
 import type { PluginSubscriber, Store } from "pinia-plugin-subscription/helpers";
 import type { StateTree } from "pinia";
-import type { CollectionStoreInstance } from "../types/collection";
 import type { Comparison } from "../types/comparison";
-import type { ContactInformationStoreInstance } from "../types/contactInformation";
-import type { ErrorsStoreInstance, IError } from "../types/error";
-import type { IdentityStoreInstance } from "../types/identity";
 import type { ParentStoreInterface, ParentStore as ParentStoreType, ParentStoreResult } from "../types/plugin";
 import type { ParentStoreOptions } from "../types/store";
-import type { ResourceIdStoreInstance } from "../types/resourceId";
-import type { WebUserStoreInstance } from "../types/webuser";
 
 
 export type {
@@ -40,7 +34,6 @@ export type { ExtendedStoreInstance } from "./store";
 export type { CollectionState, CollectionStoreInstance, CollectionStoreMethods, SearchCollectionCriteria } from "../types/collection";
 export type { Comparison };
 export type { ComparisonNumber, ComparisonString } from "./comparison";
-export declare const useCollectionStore: (id?: string) => CollectionStoreInstance;
 export type {
     ContactInformation,
     ContactInformationState,
@@ -49,15 +42,10 @@ export type {
     ContactInformationStoreState,
     ContactInformationValue
 } from "../types/contactInformation";
-export declare const useContactInformationStore: (id: string) => ContactInformationStoreInstance;
 export type { ErrorsState, ErrorsStore, ErrorsStoreInstance, IError } from "../types/error";
-export declare const useErrorsStore: <TError extends IError = IError>(id: string) => ErrorsStoreInstance<TError>;
 export type { IdentityGetters, IdentityState, IdentityStore, IdentityStoreInstance } from "../types/identity";
-export declare const useIdentityStore: (id: string) => IdentityStoreInstance;
 export type { ResourceId, ResourceIdStore, ResourceIdStoreInstance } from "../types/resourceId";
-export declare const useResourceIdStore: (id: string) => ResourceIdStoreInstance;
 export type { WebUserState, WebUserStore, WebUserStoreInstance } from "../types/webuser";
-export declare const useWebUserStore: (id?: string) => WebUserStoreInstance;
 
 
 /**
