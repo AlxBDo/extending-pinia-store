@@ -19,31 +19,7 @@ pinia.use(
     )
 )
 
-
-tracerRegistry.addListener(
-    [
-        {
-            target: 'scope',
-            value: 'rollbackSnapshotStoreWithRollback'
-        },
-        {
-            target: 'scope',
-            value: 'lists'
-        },
-        {
-            target: 'scope',
-            value: 'newContactStore'
-        }
-    ],
-    { filterMode: 'some' }
-)
-
-/**
- tracerRegistry.addListener([{
-    target: 'scope',
-    value: 'lists'
-}])
- */
+tracerRegistry.addScopesListener(['rollbackSnapshotStoreWithRollback', 'lists', 'newContactStore'])
 
 app.use(pinia)
 app.mount('#app')
