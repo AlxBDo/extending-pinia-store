@@ -1,9 +1,9 @@
-import { defineStore } from "pinia";
+import { defineAStore } from "pinia-plugin-subscription";
 import { computed, ref } from "vue";
 import type { IdentityState } from "../types/identity"
 
 
-export const useIdentityStore = (id: string) => defineStore(id, () => {
+export const useIdentityStore = (id: string) => defineAStore(id, () => {
     const birthname = ref<string | undefined>()
     const firstname = ref<string | undefined>()
     const gender = ref<string | undefined>()
