@@ -54,6 +54,7 @@ export const useErrorsStore = <TError extends IError = IError>(id: string) =>
             }
         },
         {
+            overrideReset: true,
             parentsStores: [
                 new ParentStore(`${id}ErrorCollectionStore`, useCollectionStore, {
                     actionsToRename: {

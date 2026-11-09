@@ -1,7 +1,8 @@
-import { defineStore } from "pinia";
+import { ref } from "vue"
+import { defineAStore } from "pinia-plugin-subscription";
 import { arrayObjectFindAllBy, arrayObjectFindBy } from '../utils/object'
 import type { Comparison } from "../types/comparison";
-import type { CollectionState, SearchCollectionCriteria } from "../types/collection";
+import type { SearchCollectionCriteria } from "../types/collection";
 
 
 type CollectionItem = Record<string, unknown>
@@ -11,70 +12,76 @@ function getItemCriteria(item: CollectionItem): SearchCollectionCriteria {
 }
 
 
-export const useCollectionStore = (id?: string) => defineStore(id ?? 'collectionStore', {
-    state: (): CollectionState<CollectionItem> => ({
-        items: []
-    }),
+export const useCollectionStore = (id?: string) => defineAStore(id ?? 'collectionStore', () => {
+    const items = ref<CollectionItem[]>([])
 
-    actions: {
-        addItem(item: CollectionItem) {
-            let foundedItem: CollectionItem | undefined
+    function addItem(item: CollectionItem) {
+        let foundedItem: CollectionItem | undefined
 
-            if (item.id || item['@id']) {
-                foundedItem = this.getItem(
-                    getItemCriteria(item)
-                )
-
-                if (foundedItem) {
-                    this.updateItem(item, foundedItem)
-                    return
-                }
-            }
-
-            this.items.push(item)
-        },
-
-        clear() {
-            this.items = []
-        },
-
-        getItem(criteria: Partial<CollectionItem>): CollectionItem | undefined {
-            return arrayObjectFindBy<CollectionItem>(
-                this.items,
-                criteria
+        if (item.id || item['@id']) {
+            foundedItem = getItem(
+                getItemCriteria(item)
             )
-        },
 
-        getItems(criteria?: Partial<CollectionItem>, comparisonMode: Comparison = 'strict'): CollectionItem[] {
-            if (!criteria) {
-                return this.items
-            }
-
-            return arrayObjectFindAllBy<CollectionItem>(
-                this.items,
-                criteria,
-                comparisonMode
-            )
-        },
-
-        removeItem(item: CollectionItem) {
-            this.items = this.items.filter((i) => i.id !== item.id)
-        },
-
-        setItems(items: CollectionItem[]) {
-            if (Array.isArray(items)) {
-                this.items = items
-            }
-        },
-
-        updateItem(updatedItem: CollectionItem, oldItem?: CollectionItem) {
-            if (!oldItem) {
-                oldItem = this.getItem(getItemCriteria(updatedItem))
-            }
-
-            if (oldItem) {
-                Object.assign(oldItem, updatedItem)
+            if (foundedItem) {
+                updateItem(item, foundedItem)
+                return
             }
         }
+
+        items.value.push(item)
     }
-})()
+
+    function clear() {
+        items.value = []
+    }
+
+    function getItem(criteria: Partial<CollectionItem>): CollectionItem | undefined {
+        return arrayObjectFindBy<CollectionItem>(
+            items.value,
+            criteria
+        )
+    }
+
+    function getItems(criteria?: Partial<CollectionItem>, comparisonMode: Comparison = 'strict'): CollectionItem[] {
+        if (!criteria) {
+            return items.value
+        }
+
+        return arrayObjectFindAllBy<CollectionItem>(
+            items.value,
+            criteria,
+            comparisonMode
+        )
+    }
+
+    function removeItem(item: CollectionItem) {
+        items.value = items.value.filter((i) => i.id !== item.id)
+    }
+
+    function setItems(newItems: CollectionItem[]) {
+        if (Array.isArray(newItems)) {
+            items.value = newItems
+        }
+    }
+
+    function updateItem(updatedItem: CollectionItem, oldItem?: CollectionItem) {
+        if (!oldItem) {
+            oldItem = getItem(getItemCriteria(updatedItem))
+        }
+
+        if (oldItem) {
+            Object.assign(oldItem, updatedItem)
+        }
+    }
+
+    return {
+        addItem,
+        clear,
+        getItem,
+        getItems,
+        removeItem,
+        setItems,
+        updateItem
+    }
+}, { overrideReset: true })()

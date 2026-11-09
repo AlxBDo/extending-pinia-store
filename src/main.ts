@@ -3,23 +3,22 @@ import { createPinia } from 'pinia'
 import './style.css'
 import App from './App.vue'
 import { createPlugin, PLUGIN_NAME as PPS } from 'pinia-plugin-subscription'
-import { createTracerRegistry } from 'pinia-plugin-subscription/helpers'
+import { createTraceDevtools } from 'pinia-plugin-subscription-devtools'
+import { StateSnapshotsSubscriber } from "pinia-plugin-state-snapshots"
 import ExtendsPiniaStore from './plugins/ExtendsPiniaStore'
-import { pluginName } from './utils/constants'
 
 const app = createApp(App)
 const pinia = createPinia()
 
-const tracerRegistry = createTracerRegistry()
+const { registry } = createTraceDevtools()
+StateSnapshotsSubscriber.overrideReset = true
 
 pinia.use(
     createPlugin(
-        [ExtendsPiniaStore],
-        { tracerHandler: tracerRegistry.tracerHandler }
+        [ExtendsPiniaStore, StateSnapshotsSubscriber],
+        { tracerHandler: registry.tracerHandler }
     )
 )
-
-tracerRegistry.addScopesListener(['rollbackSnapshotStoreWithRollback', 'lists', 'newContactStore'])
 
 app.use(pinia)
 app.mount('#app')

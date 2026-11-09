@@ -16,6 +16,7 @@ type DynamicState = StateTree & Record<string, unknown>
 const isProd = import.meta.env.PROD
 
 export default class StoreExtension extends Store {
+    private _actionSeq = 0
     protected override _className: string = 'StoreExtension'
     private _extendedActions: Set<string>
     private _parentsStores: CustomStore<Record<string, never>, StateTree>[] = []
@@ -62,7 +63,7 @@ export default class StoreExtension extends Store {
 
         this._extendedActions = this.initExtendedActions()
         this.extendsStore()
-        this.extendedStore.resetParentStores = () => { this.resetParentStores() }
+        this.augmentStore()
     }
 
 
@@ -71,6 +72,10 @@ export default class StoreExtension extends Store {
             this.extendedStore._customProperties = this.extendedStore._customProperties ?? new Set<string>()
                 ; (this.extendedStore._customProperties as Set<string>).add(propertyName)
         }
+    }
+
+    private augmentStore(): void {
+        this.extendedStore.resetParentStores = this.extendedStore.onResetStore = () => { this.resetParentStores() }
     }
 
     private buildAndAddParentStore(store: ParentStoreInterface): void {
@@ -259,7 +264,7 @@ State property "${childStoreKey}" of "${storeToExtend.$id ?? 'unknown store'}" i
                 store?.$reset?.()
                 this.trace(`reset:parentStore:${store.$id}`, this.extendedStore.$id, () => ({
                     $state: store.$state,
-                    groupId: traceGroups.reset(this.extendedStore.$id)
+                    groupId: traceGroups.reset(this.extendedStore.$id, ++this._actionSeq)
                 }))
             })
         }

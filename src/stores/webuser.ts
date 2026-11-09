@@ -31,6 +31,7 @@ export const useWebUserStore = (id?: string) => defineAStore<WebUserStore, WebUs
     },
     {
         actionsToExtends: ['setData'],
+        overrideReset: true,
         parentsStores: [new ParentStore('resourceId', useResourceIdStore)]
     }
 )()
