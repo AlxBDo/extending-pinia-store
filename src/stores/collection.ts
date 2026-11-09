@@ -2,7 +2,7 @@ import { ref } from "vue"
 import { defineAStore } from "pinia-plugin-subscription";
 import { arrayObjectFindAllBy, arrayObjectFindBy } from '../utils/object'
 import type { Comparison } from "../types/comparison";
-import type { CollectionState, SearchCollectionCriteria } from "../types/collection";
+import type { SearchCollectionCriteria } from "../types/collection";
 
 
 type CollectionItem = Record<string, unknown>
