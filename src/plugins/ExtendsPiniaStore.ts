@@ -6,13 +6,6 @@ import type { Store } from "pinia";
 
 
 class ExtendsPiniaStore extends PluginSubscriber<StoreExtension> {
-    protected override _resetStoreCallback = (store?: Store) => {
-        const { resetParentStores } = store as Store & ExtendedStoreActions;
-        if (typeof resetParentStores === 'function') {
-            resetParentStores()
-        }
-    }
-
     constructor() {
         super(
             pluginName,

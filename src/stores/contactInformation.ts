@@ -82,6 +82,7 @@ export const useContactInformationStore = (
         setData
     }
 }, {
+    overrideReset: true,
     parentsStores: [
         new ParentStore(
             `${id}ContactInformationCollectionStore`,

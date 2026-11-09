@@ -76,5 +76,9 @@ export const useCollectionStore = (id?: string) => defineStore(id ?? 'collection
                 Object.assign(oldItem, updatedItem)
             }
         }
+    },
+
+    options: {
+        storeOptions: { overrideReset: true }
     }
 })()

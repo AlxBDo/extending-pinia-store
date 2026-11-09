@@ -12,5 +12,9 @@ export const useResourceIdStore = (id: string) => defineStore(id, {
             if (data['@id']) { this['@id'] = data['@id'] }
             if (data.id) { this.id = data.id }
         }
+    },
+
+    options: {
+        storeOptions: { overrideReset: true }
     }
 })()

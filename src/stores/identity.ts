@@ -34,4 +34,6 @@ export const useIdentityStore = (id: string) => defineStore(id, () => {
         lastname,
         setData
     }
+}, {
+    overrideReset: true
 })()

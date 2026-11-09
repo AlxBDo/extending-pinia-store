@@ -1,7 +1,7 @@
 {
   "name": "pinia-plugin-extending-store",
   "description": "A Pinia plugin to create reusable stores that can extend other Pinia stores.",
-  "version": "0.1.6-beta.4",
+  "version": "0.1.6-beta.5",
   "type": "module",
   "author": "Alexandre Bidaud <alexbidaud85@gmail.com> (https://github.com/AlxBDo)",
   "license": "MIT",
@@ -49,7 +49,7 @@
     "coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "pinia-plugin-subscription": "^1.0.0-beta.5"
+    "pinia-plugin-subscription": "^1.0.0-beta.14"
   },
   "peerDependencies": {
     "pinia": "^3.0.2",
@@ -60,6 +60,8 @@
     "@vitejs/plugin-vue": "^6.0.1",
     "@vitest/coverage-v8": "^4.1.11",
     "@vue/tsconfig": "^0.8.1",
+    "pinia-plugin-subscription-devtools": "^1.0.0-beta.1",
+    "pinia-plugin-state-snapshots": "^1.0.0-beta.0",
     "typescript": "~5.9.3",
     "vite": "^7.2.4",
     "vitest": "^4.0.16",
