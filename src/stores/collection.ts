@@ -80,6 +80,7 @@ export const useCollectionStore = (id?: string) => defineAStore(id ?? 'collectio
         clear,
         getItem,
         getItems,
+        items,
         removeItem,
         setItems,
         updateItem
