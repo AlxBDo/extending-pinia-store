@@ -1,5 +1,5 @@
 import { computed, isRef, toRef } from "vue";
-import { isEmpty, Store, traceGroups } from "pinia-plugin-subscription/helpers";
+import { PLUGIN_EVENTS, isEmpty, Store, traceGroups } from "pinia-plugin-subscription/helpers";
 import ParentStore from "../plugins/parentStore"
 import { pluginName } from "../utils/constants";
 import type { StateTree, Store as PiniaStore } from "pinia";
@@ -75,7 +75,12 @@ export default class StoreExtension extends Store {
     }
 
     private augmentStore(): void {
-        this.extendedStore.resetParentStores = this.extendedStore.onResetStore = () => { this.resetParentStores() }
+        this.extendedStore.resetParentStores = () => { this.resetParentStores() }
+
+        // using $onResetStore (pinia-plugin-state-snapshots hook) to reset parent stores when the store is reset
+        if (typeof this.extendedStore.$onResetStore === 'function') {
+            this.extendedStore.$onResetStore(() => { this.resetParentStores() })
+        }
     }
 
     private buildAndAddParentStore(store: ParentStoreInterface): void {
@@ -164,19 +169,23 @@ Use the ParentStoreOptions : "actionsToExtends" option, to extend this action, o
      * @param key
      */
     private extendsAction(storeToExtend: DynamicStore, key: string): void {
-        const parentAction = storeToExtend[key] as (...args: unknown[]) => unknown
-        const childAction = this.extendedStore[key] as (...args: unknown[]) => unknown
+        try {
+            const parentAction = storeToExtend[key] as (...args: unknown[]) => unknown
+            const childAction = this.extendedStore[key] as (...args: unknown[]) => unknown
 
-        if (this.isOptionApi()) {
-            this.extendedStore[key] = function (this: DynamicStore, ...args: unknown[]) {
-                parentAction.apply(this, args)
-                childAction.apply(this, args)
+            if (this.isOptionApi()) {
+                this.extendedStore[key] = function (this: DynamicStore, ...args: unknown[]) {
+                    parentAction.apply(this, args)
+                    childAction.apply(this, args)
+                }
+            } else {
+                this.extendedStore[key] = (...args: unknown[]) => {
+                    parentAction(...args)
+                    childAction(...args)
+                }
             }
-        } else {
-            this.extendedStore[key] = (...args: unknown[]) => {
-                parentAction(...args)
-                childAction(...args)
-            }
+        } catch (error) {
+            this.traceError(`parentsStore:${storeToExtend.$id}:extendsAction:${key}:error`, error)
         }
     }
 
@@ -203,20 +212,30 @@ State property "${childStoreKey}" of "${storeToExtend.$id ?? 'unknown store'}" i
      * Extends to store stores list in parentsStores property
      */
     private extendsStore(): void {
-        this.trace('extends:parentsStores', this.extendedStore.$id)
-
         const storeToExtend = this.parentsStores
 
         if (!storeToExtend?.length) { return }
-
-        storeToExtend.forEach((ste) => {
-            if (ste?.$state) {
-                const parentStore = ste as DynamicStore
-                const parentStoreOptions = this._parentsStoresOptionsMap.get(parentStore.$id)
-                this.duplicateStore(parentStore, parentStoreOptions)
-                this.extendsState(parentStore, parentStoreOptions)
-            }
-        })
+        const extendedStores: string[] = []
+        try {
+            storeToExtend.forEach((ste) => {
+                try {
+                    if (ste?.$state) {
+                        const parentStore = ste as DynamicStore
+                        const parentStoreOptions = this._parentsStoresOptionsMap.get(parentStore.$id)
+                        this.duplicateStore(parentStore, parentStoreOptions)
+                        this.extendsState(parentStore, parentStoreOptions)
+                        extendedStores.push(parentStore.$id)
+                    }
+                } catch (error) {
+                    this.traceError(`extends:parentsStores:${ste?.$id}:error`, error, this.extendedStore.$id)
+                }
+            })
+            this.trace('parentsStores:extended', this.extendedStore.$id, () => ({
+                extendedStores
+            }))
+        } catch (error) {
+            this.traceError('parentsStores:extended:error', error, this.extendedStore.$id)
+        }
     }
 
     private getActionNameForChildStore(
