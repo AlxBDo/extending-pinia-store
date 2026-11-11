@@ -1,5 +1,5 @@
 import { computed, isRef, toRef } from "vue";
-import { PLUGIN_EVENTS, isEmpty, Store, traceGroups } from "pinia-plugin-subscription/helpers";
+import { isEmpty, Store, traceGroups } from "pinia-plugin-subscription/helpers";
 import ParentStore from "../plugins/parentStore"
 import { pluginName } from "../utils/constants";
 import type { StateTree, Store as PiniaStore } from "pinia";
